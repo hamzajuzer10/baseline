@@ -104,7 +104,7 @@ def load_np_from_bq(area, section, project_id):
     weeklyagg_sql = """
     SELECT date, sku_root_id,  {bl_l}, sum(total_sale_qty) as sale_qty_np
     FROM `ETL.aggregate_weekly_transaction_to_sku`
-    WHERE promo_flag = false
+    WHERE promo_flag = 0
     AND section =  "{section}"
     AND area = "{area}" 
     group by date, sku_root_id, {bl_l} """.format(bl_l = bl_l, section = section, area = area)
