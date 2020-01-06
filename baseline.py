@@ -81,7 +81,7 @@ def load_promo_from_bq(area, section, project_id):
     start_time = time.time()
 
     summary_sql = """
-    SELECT date, sku_root_id , {bl_l} , promo_id, promo_year, promo_mechanic, discount_depth, no_to_pay, no_to_buy, total_sale_qty, s_prev_bl_qty, pf_after_bl_qty
+    SELECT date, sku_root_id , {bl_l} , promo_id, promo_year, promo_mechanic, discount_depth, total_sale_qty, s_prev_bl_qty, pf_after_bl_qty
     FROM `ETL.aggregate_promo_to_sku_summary`
     WHERE section = "{section}"
     AND area = "{area}" 
