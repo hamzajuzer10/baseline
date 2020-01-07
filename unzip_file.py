@@ -124,6 +124,7 @@ def change_extension(old_extension, new_extension, directory):
 def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
+    logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
     # read csv file into dataframe
     try:
         csv_data = pd.read_csv(csv_filename, sep="|", engine="python", nrows=10)
@@ -165,10 +166,10 @@ def csv_checks(csv_filename, dataset_schema):
             ]
             # get first row of csv dataframe
             csv_header = list(csv_data.head(1))
-            logger.info(csv_header)
+            # logger.info(csv_header)
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
-            logger.info(table_columns)
+            # logger.info(table_columns)
             # compare csv headers and column names
             csv_header = [x.lower() for x in csv_header]
             table_columns = [x.lower() for x in table_columns]
@@ -181,6 +182,7 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
                 csv_data.columns = table_columns
+                logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
