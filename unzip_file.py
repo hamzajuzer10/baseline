@@ -204,7 +204,7 @@ def csv_checks(csv_filename, dataset_schema):
                 if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
                     # first row is the same as header
                     logger.info("dropping first row")
-                    csv_data.drop(csv_data.index[0])
+                    csv_data = csv_data.iloc[1:]
                     logger.info(csv_data.head())
                 else:
                     logger.info("matched bq table")
