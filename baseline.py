@@ -76,7 +76,7 @@ def load_section_from_bq(area, project_id):
     return section_table
 
 
-# Function to load aggregate_weekly_transaction_summary data at a sku level from bigquery
+# Function to load aggregate_weekly_transaction_summary data at a sku level for specific section and area from bigquery
 def load_promo_from_bq(area, section, project_id):
     start_time = time.time()
 
@@ -86,7 +86,6 @@ def load_promo_from_bq(area, section, project_id):
     WHERE section = "{section}"
     AND area = "{area}" 
     """.format(bl_l = bl_l, section = section, area = area)
-    start = time.time()
 
     for i in tqdm(range(1), desc='Loading table...'):
         summary_table = pandas_gbq.read_gbq(summary_sql, project_id=project_id)
@@ -135,8 +134,9 @@ def aggregate_np(weekly_agg, level):
 def baseline_pct (frame, parameter:str, agg_np, bl_l):        
     # get the aggregated none promotion data for the group that the SKU belongs to
     df = agg_np[agg_np[bl_l] == parameter].sort_values(by = ['date']).reset_index(drop=True)
-  
+    # set the default pct to 1  
     df['sale_qty_pct'] = 1
+    # set the pct to nan when the denominator is 0
     for i in range(1,len(df)):
         if df.loc[i-1,'sale_qty_np'] == 0:
             df.loc[i,'sale_qty_pct'] = np.nan
@@ -149,19 +149,12 @@ def baseline_pct (frame, parameter:str, agg_np, bl_l):
 
 # define function to process baseline for one sku
 def baseline_id(frame, id: str, summary_table, baseline_ref, bl_l, ext_week, section):
-    """produce baseline and cannibalisation line for the sku
-    Args:
-        sku(str): sku_root_id
-    Returns:
-        final_df(pd.DataFrame): Final, preprocessed dataframe
-    """
-    logger.debug(f'{id} - being processed')
-    
+
+    logger.debug(f'{id} - being processed') 
     
     # get dataframe for the specific sku
     df_id = summary_table[summary_table.uniq_id == id].sort_values(by=['date']).reset_index(drop=True)
     
-
     # define change_flag to be the reference of baseline calculation
     # set 1 : for the first day on promotion
     # set 2: for the rest days on promotion after first day
@@ -176,8 +169,6 @@ def baseline_id(frame, id: str, summary_table, baseline_ref, bl_l, ext_week, sec
         df_id.loc[i, 'promo_year'] = df_id.loc[i-1, 'promo_year']
         df_id.loc[i, 'promo_mechanic'] = df_id.loc[i-1, 'promo_mechanic']
         df_id.loc[i, 'discount_depth'] = df_id.loc[i-1, 'discount_depth']
-#         df_id.loc[i, 'no_to_buy'] = df_id.loc[i-1, 'no_to_buy']
-#         df_id.loc[i, 'no_to_pay'] = df_id.loc[i-1, 'no_to_pay']
         df_id.loc[i, 'uniq_id'] = df_id.loc[i-1, 'uniq_id']
         df_id.loc[i, 'change_flag'] = 3     
 
@@ -209,18 +200,6 @@ def baseline_id(frame, id: str, summary_table, baseline_ref, bl_l, ext_week, sec
                                                     2)
                                     
     logger.debug(f'{section} - {id} - completed baseline')
-
-    # # produce extended baseline
-    # for i in range(0, len(table)):
-    #     if table.loc[i, 'change_flag'] == 3:
-    #         table.loc[i, 'sale_qty_bl'] = round(table.loc[i - 1, 'sale_qty_bl'] * table.loc[i, 'sale_qty_pct'], 2)
-    # logger.debug(f'{sku} - completed pull forward baseline')
-
-        # sku_promo.append(table)
-
-    
-    # # define incremental sale
-    # table['incremental_qty'] = pd.to_numeric(table['total_sale_qty']) - table['sale_qty_bl']
     
     
     # define final dataframe
@@ -232,8 +211,7 @@ def baseline_id(frame, id: str, summary_table, baseline_ref, bl_l, ext_week, sec
     frame.append(final_df)
     
 if __name__ == "__main__":
-    
-    
+     
     start_time = time.time()
 
     logger.info("Loading input tables from Bigquery....")
@@ -256,6 +234,7 @@ if __name__ == "__main__":
             
         logger.info("Loading promo table from Bigquery....")
         summary_table = load_promo_from_bq(bl_s, section, project_id)
+        # transform the data into the correct format
         summary_table['promo_year'] = summary_table['promo_year'].apply(str)
         summary_table['discount_depth_2'] = summary_table['discount_depth'].fillna('ISNULL')
         summary_table['uniq_id'] = summary_table['sku_root_id'] + "-"+ summary_table['promo_id'] + "-"+ summary_table['promo_year'] + "-"+ summary_table['promo_mechanic'] + "-"+ summary_table['discount_depth_2']
