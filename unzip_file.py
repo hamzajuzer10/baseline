@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import logging
 import re
+import json
 from fuzzywuzzy import process, fuzz
 
 # Instantiates a client
@@ -32,6 +33,10 @@ print(blob_list)
 home = str(Path.home())
 local_dir = os.path.abspath(home + "/etl_test/")
 # local_directory = os.fsencode("~/etl_test/")
+
+# open table_mapping.json
+with open("table_mapping.json", "r") as mapping:
+    table_mapping = json.load(mapping)
 
 
 def initialise_logger():
@@ -117,7 +122,7 @@ def change_extension(old_extension, new_extension, directory):
 
 
 def csv_checks(csv_filename, dataset_schema):
-    """Checks format of csv files with Bigquery tables"""
+    """Checks format of delta csv files with Bigquery tables"""
 
     # read csv file into dataframe
     try:
@@ -125,11 +130,13 @@ def csv_checks(csv_filename, dataset_schema):
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
 
+    # check csv dataframe is not empty
     if csv_data.empty is False:
         # logger.info(csv_data.describe(include="all"))
         # check for matching table in Bigquery
         fn = csv_filename.split("/")[-1]
         table_name_list = dataset_schema.table_name.unique()
+        """
         # remove digits and replace underscores from both strings
         fn_str = re.sub(r"\d+", "", fn.split(".")[0]).replace("_", " ").lower()
         table_name_str = [
@@ -147,20 +154,38 @@ def csv_checks(csv_filename, dataset_schema):
         matched_table_schema = dataset_schema.loc[
             dataset_schema.table_name == table_name_list[matched_table[2]]
         ]
-        # check if csv header matches Bigquery table
+        """
+
+        # replace digits with x and remove extension
+        fn_str = re.sub(r"\d+", "X", fn.split(".")[0])
+        # using mapping table select the correct schema
+        matched_table_schema = dataset_schema.loc[
+            dataset_schema.table_name == table_mapping[fn_str]
+        ]
+
+        # check header exists
         csv_header = list(csv_data.head(1))
         logger.info(csv_header)
-        table_columns = matched_table_schema.column_name.tolist()
-        logger.info(table_columns)
-        csv_header = [x.lower() for x in csv_header]
-        table_columns = [x.lower() for x in table_columns]
-        if len(csv_header) == len(table_columns) and len(csv_header) == sum(
-            [1 for i, j in zip(csv_header, table_columns) if i == j]
-        ):
-            logger.info("Headers matched")
+        header_check = [re.match(r"\d+", x) for x in csv_header]
+        if True in header_check:
+            # delta table does not have header
+            logger.info("Delta table {} does not have headers".format(csv_filename))
         else:
-            logger.info("Headers do not match")
-            logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
+            # delta table has header
+            # check if csv header matches Bigquery table
+            csv_header = list(csv_data.head(1))
+            logger.info(csv_header)
+            table_columns = matched_table_schema.column_name.tolist()
+            logger.info(table_columns)
+            csv_header = [x.lower() for x in csv_header]
+            table_columns = [x.lower() for x in table_columns]
+            if len(csv_header) == len(table_columns) and len(csv_header) == sum(
+                [1 for i, j in zip(csv_header, table_columns) if i == j]
+            ):
+                logger.info("Headers matched")
+            else:
+                logger.info("Headers do not match")
+                logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
 
     else:
         logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
