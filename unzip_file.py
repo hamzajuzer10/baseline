@@ -174,9 +174,9 @@ def csv_checks(csv_filename, dataset_schema):
             # logger.info(table_columns)
             # compare csv headers and column names
             csv_header = [str(x).lower() for x in csv_header]
-            table_columns = [x.lower() for x in table_columns]
-            if len(csv_header) == len(table_columns) and len(csv_header) == sum(
-                [1 for i, j in zip(csv_header, table_columns) if i == j]
+            table_columns_lower = [x.lower() for x in table_columns]
+            if len(csv_header) == len(table_columns_lower) and len(csv_header) == sum(
+                [1 for i, j in zip(csv_header, table_columns_lower) if i == j]
             ):
                 logger.info("HEADERS MATCHED")
             elif len(csv_header) == len(table_columns):
@@ -184,7 +184,7 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
                 csv_data.columns = table_columns
-                # logger.info(csv_data.head())
+                logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
