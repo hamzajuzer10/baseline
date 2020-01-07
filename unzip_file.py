@@ -201,14 +201,15 @@ def csv_checks(csv_filename, dataset_schema):
                 # add bq table column as headers
                 csv_data.columns = table_columns
                 logger.info(csv_data.head())
-                if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
-                    # first row is the same as header
-                    logger.info("dropping first row")
-                    csv_data = csv_data.iloc[1:]
-                    logger.info(csv_data.head())
-                else:
-                    logger.info("matched bq table")
+
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
+            if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
+                # first row is the same as header
+                logger.info("dropping first row")
+                csv_data = csv_data.iloc[1:]
+                logger.info(csv_data.head())
+            else:
+                logger.info("matched bq table")
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
