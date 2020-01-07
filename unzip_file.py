@@ -171,7 +171,7 @@ def csv_checks(csv_filename, dataset_schema):
             table_columns = matched_table_schema.column_name.tolist()
             # logger.info(table_columns)
             # compare csv headers and column names
-            csv_header = [x.lower() for x in csv_header]
+            csv_header = [str(x).lower() for x in csv_header]
             table_columns = [x.lower() for x in table_columns]
             if len(csv_header) == len(table_columns) and len(csv_header) == sum(
                 [1 for i, j in zip(csv_header, table_columns) if i == j]
