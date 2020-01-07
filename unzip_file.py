@@ -184,23 +184,23 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
                 csv_data.columns = table_columns
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
                 # add bq table column as headers
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
                 logger.info("csv has {a} columns".format(a=len(csv_header)))
                 logger.info("bq table has {b} columns".format(b=len(table_columns)))
                 # add blank columns missing from bq table to csv dataframe
                 for c in range(1, len(table_columns) + 1 - len(csv_header)):
                     csv_data["new_column_{}".format(c)] = np.nan
                     logger.info("empty column added!")
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
                 assert csv_data.shape[1] == len(table_columns)
                 # add bq table column as headers
                 csv_data.columns = table_columns
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
 
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
             if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
@@ -209,6 +209,7 @@ def csv_checks(csv_filename, dataset_schema):
                 csv_data = csv_data.iloc[1:]
                 logger.info(csv_data.head())
             else:
+                logger.info(csv_data.head())
                 logger.info("matched bq table")
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
