@@ -28,7 +28,7 @@ blobs = storage_client.list_blobs(bucket, prefix="Working_folder/AT/ETL_test/")
 
 blob_list = [blob.name for blob in blobs]
 blob_fname = [blob.split("/")[-1] for blob in blob_list]
-print(blob_list)
+# print(blob_list)
 
 home = str(Path.home())
 local_dir = os.path.abspath(home + "/etl_test/")
@@ -182,10 +182,12 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
                 csv_data.columns = table_columns
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
+                logger.info(csv_header)
+                logger.info(table_columns)
                 logger.info("Did not attempt to upload {} to Bigquery".format(fn))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
