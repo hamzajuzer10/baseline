@@ -186,9 +186,16 @@ def csv_checks(csv_filename, dataset_schema):
             else:
                 # not matched - error
                 logger.info("Headers do not match")
-                logger.info(csv_header)
-                logger.info(table_columns)
-                logger.info("Did not attempt to upload {} to Bigquery".format(fn))
+                # logger.info(csv_header)
+                # logger.info(table_columns)
+                # add blank columns missing from bq table to csv dataframe
+                for i in range(1, len(table_columns) - len(csv_header)):
+                    csv_data["{}".format(i)] = np.nan
+                assert csv_data.shape[1] == len(table_columns)
+                # add bq table column as headers
+                csv_data.columns = table_columns
+                logger.info(csv_data.head())
+                # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
