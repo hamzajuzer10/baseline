@@ -179,7 +179,7 @@ def csv_checks(csv_filename, dataset_schema):
                 [1 for i, j in zip(csv_header, table_columns_lower) if i == j]
             ):
                 # use first row as header and drop
-                csv_data.columns = csv_data.iloc[0]
+                csv_data.columns = table_columns
                 csv_data = csv_data.iloc[1:]
                 logger.info("HEADERS MATCHED")
             elif len(csv_header) == len(table_columns):
