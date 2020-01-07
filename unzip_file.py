@@ -189,12 +189,13 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_header)
                 # logger.info(table_columns)
                 # add blank columns missing from bq table to csv dataframe
-                for i in range(1, len(table_columns) - len(csv_header)):
-                    csv_data["{}".format(i)] = np.nan
+                for c in range(len(table_columns) - len(csv_header)):
+                    csv_data["{}".format(c)] = np.nan
+                logger.info(csv_data.head())
                 assert csv_data.shape[1] == len(table_columns)
                 # add bq table column as headers
                 csv_data.columns = table_columns
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
