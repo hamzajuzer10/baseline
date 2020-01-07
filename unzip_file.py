@@ -166,7 +166,7 @@ def csv_checks(csv_filename, dataset_schema):
             ]
             # get first row of csv dataframe
             csv_header = list(csv_data.head(1))
-            # logger.info(csv_header)
+            logger.info(csv_header)
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
             # logger.info(table_columns)
@@ -187,7 +187,6 @@ def csv_checks(csv_filename, dataset_schema):
                 # not matched - error
                 logger.info("Headers do not match")
                 # add bq table column as headers
-                csv_data.columns = table_columns
                 logger.info(csv_data.head())
                 # logger.info(csv_header)
                 # logger.info(table_columns)
