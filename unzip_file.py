@@ -158,10 +158,13 @@ def csv_checks(csv_filename, dataset_schema):
 
         # replace digits with x and remove extension
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
-        # using mapping table select the correct schema
-        matched_table_schema = dataset_schema.loc[
-            dataset_schema.table_name == table_mapping[fn_str]
-        ]
+        if table_mapping[fn_str] <> "":
+            # using mapping table select the correct schema
+            matched_table_schema = dataset_schema.loc[
+                dataset_schema.table_name == table_mapping[fn_str]
+            ]
+        else:
+            logger.info("Delta table {} does not have mapping".format(csv_filename))
 
         # check header exists
         csv_header = list(csv_data.head(1))
