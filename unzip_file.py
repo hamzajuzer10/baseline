@@ -186,12 +186,15 @@ def csv_checks(csv_filename, dataset_schema):
             else:
                 # not matched - error
                 logger.info("Headers do not match")
+                # add bq table column as headers
+                csv_data.columns = table_columns
+                logger.info(csv_data.head())
                 # logger.info(csv_header)
                 # logger.info(table_columns)
                 # add blank columns missing from bq table to csv dataframe
                 for c in range(1, len(table_columns) - len(csv_header)):
                     csv_data["new_column_{}".format(c)] = np.nan
-                # logger.info(csv_data.head())
+                logger.info(csv_data.head())
                 assert csv_data.shape[1] == len(table_columns)
                 # add bq table column as headers
                 csv_data.columns = table_columns
