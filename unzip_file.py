@@ -163,27 +163,28 @@ def csv_checks(csv_filename, dataset_schema):
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
-            # check header exists
+            # get first row of csv dataframe
             csv_header = list(csv_data.head(1))
             logger.info(csv_header)
-            header_check = [re.search(r"\d+", x) for x in csv_header]
-            logger.info(header_check)
-            if True in header_check:
-                # delta table does not have header
-                logger.info("Delta table {} does not have headers".format(fn))
+            # get column names of bq table
+            table_columns = matched_table_schema.column_name.tolist()
+            logger.info(table_columns)
+            # compare csv headers and column names
+            csv_header = [x.lower() for x in csv_header]
+            table_columns = [x.lower() for x in table_columns]
+            if len(csv_header) == len(table_columns) and len(csv_header) == sum(
+                [1 for i, j in zip(csv_header, table_columns) if i == j]
+            ):
+                logger.info("HEADERS MATCHED")
+            elif len(csv_header) == len(table_columns):
+                # same csv header count and bq table column count
+                logger.info("Adding headers to {}".format(fn))
+                # add bq table column as header
+                csv_data.columns = table_columns
             else:
-                # delta table has header
-                table_columns = matched_table_schema.column_name.tolist()
-                logger.info(table_columns)
-                csv_header = [x.lower() for x in csv_header]
-                table_columns = [x.lower() for x in table_columns]
-                if len(csv_header) == len(table_columns) and len(csv_header) == sum(
-                    [1 for i, j in zip(csv_header, table_columns) if i == j]
-                ):
-                    logger.info("HEADERS MATCHED")
-                else:
-                    logger.info("Headers do not match")
-                    logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
+                # not matched - error
+                logger.info("Headers do not match")
+                logger.info("Did not attempt to upload {} to Bigquery".format(fn))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
