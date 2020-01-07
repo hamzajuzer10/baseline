@@ -163,32 +163,31 @@ def csv_checks(csv_filename, dataset_schema):
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
-        else:
-            logger.info("Delta table {} does not have mapping".format(csv_filename))
-
-        # check header exists
-        csv_header = list(csv_data.head(1))
-        logger.info(csv_header)
-        header_check = [re.match(r"\d+", x) for x in csv_header]
-        if True in header_check:
-            # delta table does not have header
-            logger.info("Delta table {} does not have headers".format(csv_filename))
-        else:
-            # delta table has header
-            # check if csv header matches Bigquery table
+            # check header exists
             csv_header = list(csv_data.head(1))
             logger.info(csv_header)
-            table_columns = matched_table_schema.column_name.tolist()
-            logger.info(table_columns)
-            csv_header = [x.lower() for x in csv_header]
-            table_columns = [x.lower() for x in table_columns]
-            if len(csv_header) == len(table_columns) and len(csv_header) == sum(
-                [1 for i, j in zip(csv_header, table_columns) if i == j]
-            ):
-                logger.info("Headers matched")
+            header_check = [re.match(r"\d+", x) for x in csv_header]
+            if True in header_check:
+                # delta table does not have header
+                logger.info("Delta table {} does not have headers".format(fn))
             else:
-                logger.info("Headers do not match")
-                logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
+                # delta table has header
+                # check if csv header matches Bigquery table
+                csv_header = list(csv_data.head(1))
+                logger.info(csv_header)
+                table_columns = matched_table_schema.column_name.tolist()
+                logger.info(table_columns)
+                csv_header = [x.lower() for x in csv_header]
+                table_columns = [x.lower() for x in table_columns]
+                if len(csv_header) == len(table_columns) and len(csv_header) == sum(
+                    [1 for i, j in zip(csv_header, table_columns) if i == j]
+                ):
+                    logger.info("Headers matched")
+                else:
+                    logger.info("Headers do not match")
+                    logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
+        else:
+            logger.info("Delta table {} does not have mapping".format(fn))
 
     else:
         logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
