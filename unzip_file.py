@@ -191,7 +191,7 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("csv has {a} columns".format(a=len(csv_header)))
                 logger.info("bq table has {b} columns".format(b=len(table_columns)))
                 # add blank columns missing from bq table to csv dataframe
-                for c in range(1, len(table_columns) - len(csv_header)):
+                for c in range(1, len(table_columns) + 1 - len(csv_header)):
                     csv_data["new_column_{}".format(c)] = np.nan
                     logger.info("empty column added!")
                 logger.info(csv_data.head())
