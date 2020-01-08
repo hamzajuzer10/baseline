@@ -142,12 +142,14 @@ def csv_checks(csv_filename, dataset_schema):
             csv_filename, header=None, sep="|", engine="python", assume_missing=True
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
+        read_successful = True
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
+        read_successful = False
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
-    if len(csv_data.index) != 0:
+    if read_successful:
         # logger.info(csv_data.describe(include="all"))
         # check for matching table in Bigquery
         fn = csv_filename.split("/")[-1]
