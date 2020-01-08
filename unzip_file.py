@@ -256,6 +256,8 @@ def csv_checks(csv_filename, dataset_schema):
             full_csv_data.drop_duplicates(inplace=True)
             # reset index
             full_csv_data.reset_index(drop=True)
+            # remove quotation marks
+            full_csv_data = full_csv_data.map_partitions(lambda d: d.replace(r'"', ""))
             # csv_data = csv_data.compute()
             logger.info(full_csv_data.head())
             logger.info(full_csv_data.shape)
