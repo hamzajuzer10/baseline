@@ -138,7 +138,7 @@ def csv_checks(csv_filename, dataset_schema):
     # read csv file into dataframe
     try:
         csv_data = pd.read_csv(
-            csv_filename, header=None, index_col=False, sep="|", engine="python", nrow=10
+            csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=10
         )
         full_csv_data = dd.read_csv(
             csv_filename, header=None, sep="|", engine="python", assume_missing=True
