@@ -257,9 +257,9 @@ def csv_checks(csv_filename, dataset_schema):
             # reset index
             full_csv_data.reset_index(drop=True)
             # remove quotation marks
-            full_csv_data = full_csv_data.map_partitions(lambda d: d.replace(r'"', ""))
+            # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
             # csv_data = csv_data.compute()
-            logger.info(full_csv_data.head())
+            logger.info(full_csv_data.describe())
             logger.info(full_csv_data.shape)
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
