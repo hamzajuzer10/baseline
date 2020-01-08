@@ -237,10 +237,10 @@ def csv_checks(csv_filename, dataset_schema):
             # remove duplicates
             full_csv_data.drop_duplicates(inplace=True)
             # reset index
-            full_csv_data.reset_index(drop=True, inplace=True)
+            full_csv_data.reset_index(drop=True)
             # csv_data = csv_data.compute()
-            logger.info(csv_data.head())
-            logger.info(csv_data.shape)
+            logger.info(full_csv_data.head())
+            logger.info(full_csv_data.shape)
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
