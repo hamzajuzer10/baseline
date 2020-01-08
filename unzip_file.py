@@ -227,7 +227,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # add bq table column as header
                 full_csv_data.columns = table_columns
                 csv_data.columns = table_columns
-                # logger.info(csv_data.head())
+                logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
