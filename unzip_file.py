@@ -137,8 +137,10 @@ def csv_checks(csv_filename, dataset_schema):
     logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
     # read csv file into dataframe
     try:
-        # csv_data = pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
-        csv_data = dd.read_csv(
+        csv_data = pd.read_csv(
+            csv_filename, header=None, index_col=False, sep="|", engine="python", nrow=10
+        )
+        full_csv_data = dd.read_csv(
             csv_filename, header=None, sep="|", engine="python", assume_missing=True
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
@@ -183,7 +185,7 @@ def csv_checks(csv_filename, dataset_schema):
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
             # get first row of csv dataframe
-            csv_header = list(csv_data.loc[0, :])
+            csv_header = list(csv_data.iloc[0])
             # logger.info(csv_header)
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
@@ -194,15 +196,15 @@ def csv_checks(csv_filename, dataset_schema):
             if len(csv_header) == len(table_columns_lower) and len(csv_header) == sum(
                 [1 for i, j in zip(csv_header, table_columns_lower) if i == j]
             ):
-                # use first row as header and drop
-                csv_data.columns = table_columns
-                csv_data = csv_data.iloc[1:]
                 logger.info("HEADERS MATCHED")
+                # use first row as header and drop
+                full_csv_data.columns = table_columns
+                full_csv_data = full_csv_data.loc[1:, :]
             elif len(csv_header) == len(table_columns):
                 # same csv header count and bq table column count
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
-                csv_data.columns = table_columns
+                full_csv_data.columns = table_columns
                 # logger.info(csv_data.head())
             else:
                 # not matched - error
@@ -213,19 +215,19 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("bq table has {b} columns".format(b=len(table_columns)))
                 # add blank columns missing from bq table to csv dataframe
                 for c in range(1, len(table_columns) + 1 - len(csv_header)):
-                    csv_data["new_column_{}".format(c)] = np.nan
+                    full_csv_data["new_column_{}".format(c)] = np.nan
                     logger.info("empty column added!")
                 # logger.info(csv_data.head())
-                assert csv_data.shape[1] == len(table_columns)
+                assert full_csv_data.shape[1] == len(table_columns)
                 # add bq table column as headers
-                csv_data.columns = table_columns
+                full_csv_data.columns = table_columns
                 # logger.info(csv_data.head())
 
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
-            if csv_data[csv_data.columns[0]].loc[0] == csv_data.columns[0]:
+            if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
                 # first row is the same as header
                 logger.info("dropping first row")
-                csv_data = csv_data.iloc[1:]
+                full_csv_data = full_csv_data.loc[1:, :]
                 # logger.info(csv_data.head())
             else:
                 # logger.info(csv_data.head())
@@ -233,9 +235,9 @@ def csv_checks(csv_filename, dataset_schema):
 
             # clean up csv_data
             # remove duplicates
-            csv_data.drop_duplicates(inplace=True)
+            full_csv_data.drop_duplicates(inplace=True)
             # reset index
-            csv_data.reset_index(drop=True, inplace=True)
+            full_csv_data.reset_index(drop=True, inplace=True)
             # csv_data = csv_data.compute()
             logger.info(csv_data.head())
             logger.info(csv_data.shape)
