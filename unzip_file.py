@@ -19,6 +19,7 @@ import json
 from fuzzywuzzy import process, fuzz
 from dask.distributed import Client as dClient
 import dask.dataframe as dd
+from multiprocessing import Pool
 
 # Create a local dask cluster with workers in same process
 # dask_client = dClient(processes=False)
@@ -126,13 +127,22 @@ def change_extension(old_extension, new_extension, directory):
             continue
 
 
+def read_csv_multi(csv_filename):
+    return pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
+
+
 def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
     logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
     # read csv file into dataframe
     try:
-        csv_data = pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
+        with Pool(processes=8) as pool:  # or whatever your hardware can support
+            # have your pool map the file names to dataframes
+            df_list = pool.map(read_csv_multi, csv_filename)
+            # reduce the list of dataframes to a single dataframe
+            csv_data = pd.concat(df_list, ignore_index=True)
+        # csv_data = pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
