@@ -135,7 +135,7 @@ def csv_checks(csv_filename, dataset_schema):
         csv_data = dd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
-
+    csv_data = dd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
     # check csv dataframe is not empty
     if csv_data.empty is False:
         # logger.info(csv_data.describe(include="all"))
