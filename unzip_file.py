@@ -218,6 +218,7 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("HEADERS MATCHED")
                 # use first row as header and drop
                 full_csv_data.columns = table_columns
+                logger.info(full_csv_data.head())
                 full_csv_data = full_csv_data.loc[1:, :]
                 logger.info(full_csv_data.head())
             elif len(csv_header) == len(table_columns):
@@ -247,6 +248,7 @@ def csv_checks(csv_filename, dataset_schema):
             if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
                 # first row is the same as header
                 logger.info("dropping first row")
+                logger.info(full_csv_data.head())
                 full_csv_data = full_csv_data.loc[1:, :]
                 logger.info(full_csv_data.head())
                 # logger.info(csv_data.head())
