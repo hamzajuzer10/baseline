@@ -162,6 +162,7 @@ def csv_checks(csv_filename, dataset_schema):
             csv_filename, header=None, sep="|", engine="python", assume_missing=True
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
+        logger.info("number of partitions = {}".format(full_csv_data.npartitions))
         read_successful = True
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
@@ -259,8 +260,10 @@ def csv_checks(csv_filename, dataset_schema):
             # remove quotation marks
             # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
             # csv_data = csv_data.compute()
-            logger.info("number of partitions = {}".format(full_csv_data.npartitions))
-            logger.info(full_csv_data.head())
+            try:
+                logger.info(full_csv_data.head())
+            except pd.errors.ParserError:
+                logger.info("Could not parse csv")
             logger.info(full_csv_data.shape)
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
