@@ -222,7 +222,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_data.head())
 
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
-            if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
+            if csv_data[csv_data.columns[0]].loc[0] == csv_data.columns[0]:
                 # first row is the same as header
                 logger.info("dropping first row")
                 csv_data = csv_data.iloc[1:]
