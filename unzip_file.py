@@ -218,14 +218,15 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("HEADERS MATCHED")
                 # use first row as header and drop
                 full_csv_data.columns = table_columns
-                logger.info(full_csv_data.head())
+                csv_data.columns = table_columns
                 full_csv_data = full_csv_data.loc[1:, :]
-                logger.info(full_csv_data.head())
+                csv_data = csv_data.iloc[1:]
             elif len(csv_header) == len(table_columns):
                 # same csv header count and bq table column count
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
                 full_csv_data.columns = table_columns
+                csv_data.columns = table_columns
                 # logger.info(csv_data.head())
             else:
                 # not matched - error
@@ -242,6 +243,7 @@ def csv_checks(csv_filename, dataset_schema):
                 assert full_csv_data.shape[1] == len(table_columns)
                 # add bq table column as headers
                 full_csv_data.columns = table_columns
+                csv_data.columns = table_columns
                 # logger.info(csv_data.head())
 
                 # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
@@ -250,6 +252,7 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("dropping first row")
                 logger.info(full_csv_data.head())
                 full_csv_data = full_csv_data.loc[1:, :]
+                csv_data = csv_data.iloc[1:]
                 logger.info(full_csv_data.head())
                 # logger.info(csv_data.head())
             else:
