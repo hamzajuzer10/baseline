@@ -262,8 +262,9 @@ def csv_checks(csv_filename, dataset_schema):
             # csv_data = csv_data.compute()
             try:
                 logger.info(full_csv_data.head())
-            except pd.errors.ParserError:
+            except:
                 logger.info("Could not parse csv")
+                logger.info(csv_data.head())
             logger.info(full_csv_data.shape)
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
