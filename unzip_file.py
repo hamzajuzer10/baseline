@@ -161,6 +161,7 @@ def csv_checks(csv_filename, dataset_schema):
 
         # replace digits with x and remove extension
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
+        # if file mapping exists for file name
         if table_mapping[fn_str] != "":
             # using mapping table select the correct schema
             matched_table_schema = dataset_schema.loc[
@@ -168,7 +169,7 @@ def csv_checks(csv_filename, dataset_schema):
             ]
             # get first row of csv dataframe
             csv_header = list(csv_data.iloc[0])
-            logger.info(csv_header)
+            # logger.info(csv_header)
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
             # logger.info(table_columns)
@@ -210,10 +211,17 @@ def csv_checks(csv_filename, dataset_schema):
                 # first row is the same as header
                 logger.info("dropping first row")
                 csv_data = csv_data.iloc[1:]
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
             else:
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
                 logger.info("matched bq table")
+
+            # clean up csv_data
+            # remove duplicates
+            csv_data.drop_duplicates(inplace=True)
+            # reset index
+            csv_data.reset_index(inplace=True)
+            logger.info(csv_data.head())
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
