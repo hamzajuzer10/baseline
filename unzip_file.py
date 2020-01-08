@@ -21,6 +21,24 @@ from dask.distributed import Client as dClient
 import dask.dataframe as dd
 from multiprocessing import Pool
 
+# --------------------------
+# to handle large csv fields
+import sys
+import csv
+
+maxInt = sys.maxsize
+
+while True:
+    # decrease the maxInt value by factor 10
+    # as long as the OverflowError occurs.
+
+    try:
+        csv.field_size_limit(maxInt)
+        break
+    except OverflowError:
+        maxInt = int(maxInt / 10)
+# --------------------------
+
 # Create a local dask cluster with workers in same process
 # dask_client = dClient(processes=False)
 
