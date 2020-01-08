@@ -132,7 +132,9 @@ def csv_checks(csv_filename, dataset_schema):
     logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
     # read csv file into dataframe
     try:
-        csv_data = pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
+        csv_data = pd.read_csv(
+            csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=10
+        )
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
@@ -224,7 +226,7 @@ def csv_checks(csv_filename, dataset_schema):
             csv_data.drop_duplicates(inplace=True)
             # reset index
             csv_data.reset_index(drop=True, inplace=True)
-            csv_data = csv_data.compute()
+            # csv_data = csv_data.compute()
             logger.info(csv_data.head())
             logger.info(csv_data.shape)
         else:
