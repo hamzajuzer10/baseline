@@ -373,7 +373,7 @@ ORDER BY promo_id , promo_year, sku_root_id
         
         
         # Create a disctionary to loop over all destination tables and scripts
-        baseline_tables = {'baseline_promo': promo_dashboard_sql, 'pareto_section_sku': pareto_section_sku, 'pareto_sku_table': pareto_sku_table
+        baseline_tables = {'baseline_promo': promo_dashboard_sql, 'pareto_section_sku': pareto_section_sku, 'pareto_sku_table': pareto_sku_table,
                           'pareto_promo':pareto_promo, 'pareto_promo_table': pareto_promo_table} 
         
         job_config.write_disposition = "WRITE_TRUNCATE"
