@@ -219,7 +219,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # use first row as header and drop
                 full_csv_data.columns = table_columns
                 csv_data.columns = table_columns
-                full_csv_data = full_csv_data.loc[1:, :]
+                full_csv_data = full_csv_data.drop([0])
                 csv_data = csv_data.iloc[1:]
             elif len(csv_header) == len(table_columns):
                 # same csv header count and bq table column count
@@ -252,7 +252,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # first row is the same as header
                 logger.info("dropping first row")
                 logger.info(full_csv_data.head())
-                full_csv_data = full_csv_data.loc[1:, :]
+                full_csv_data = full_csv_data.drop([0])
                 csv_data = csv_data.iloc[1:]
                 logger.info(full_csv_data.head())
                 # logger.info(csv_data.head())
