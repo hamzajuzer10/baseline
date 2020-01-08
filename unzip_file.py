@@ -221,10 +221,7 @@ def csv_checks(csv_filename, dataset_schema):
                 csv_data.columns = table_columns
                 full_csv_data = full_csv_data.loc[1:, :]
                 csv_data = csv_data.iloc[1:]
-            elif (
-                len(csv_header) == len(table_columns)
-                and fn_str != "XXXXXXXX_M_LOCALIZACIONES_NEA_TABLA_XXXXXXXX"
-            ):
+            elif len(csv_header) == len(table_columns):
                 # same csv header count and bq table column count
                 logger.info("Adding headers to {}".format(fn))
                 # add bq table column as header
