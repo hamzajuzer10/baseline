@@ -147,7 +147,7 @@ def csv_checks(csv_filename, dataset_schema):
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
-    if len(csv_data) != 0:
+    if len(csv_data.index) != 0:
         # logger.info(csv_data.describe(include="all"))
         # check for matching table in Bigquery
         fn = csv_filename.split("/")[-1]
