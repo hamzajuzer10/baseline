@@ -183,7 +183,7 @@ def csv_checks(csv_filename, dataset_schema):
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
             # get first row of csv dataframe
-            csv_header = list(csv_data.iloc[0, :])
+            csv_header = list(csv_data.loc[0, :])
             # logger.info(csv_header)
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
