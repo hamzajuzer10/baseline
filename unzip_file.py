@@ -263,7 +263,7 @@ def csv_checks(csv_filename, dataset_schema):
             # reset index
             full_csv_data = full_csv_data.reset_index(drop=True)
             # add timestamp column
-            full_csv_data["timestamp"] = re.findall("\d+", fn)[0]
+            full_csv_data["TIMESTAMP"] = re.findall("\d+", fn)[0]
             # remove quotation marks
             # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
             # csv_data = csv_data.compute()
@@ -273,12 +273,14 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info("Could not parse csv")
                 # logger.info(csv_data.head())
             # write to gbq
+            logger.info("writing {} to bigquery......".format(fn_str))
             pandas_gbq.to_gbq(
                 full_csv_data.compute(),
-                "WIP." + table_mapping[fn_str] + "delta",
+                "WIP." + table_mapping[fn_str] + "_delta",
                 project_id=project_id,
                 if_exists="append",
             )
+            logger.info("completed writing {} to bigquery".format(fn_str))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
