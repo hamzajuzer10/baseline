@@ -196,6 +196,7 @@ def csv_checks(csv_filename, dataset_schema):
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
+            table_dtypes = {}
             # create dictionary columns:dtypes
             for idx, col in enumerate(matched_table_schema.column_name.tolist()):
                 table_dtypes[col] = matched_table_schema.data_type.tolist()[idx]
