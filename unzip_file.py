@@ -172,17 +172,16 @@ def csv_checks(csv_filename, dataset_schema):
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
         logger.info(csv_data.head())
         logger.info("first index value is {}".format(full_csv_data.head().index[0]))
-
+        # if index is not default index reset index and drop last column
+        if full_csv_data.head().index[0] != 0:
+            full_csv_data = full_csv_data.reset_index()
+            full_csv_data = full_csv_data.iloc[:, :-1]
         logger.info(full_csv_data.head())
         logger.info("number of partitions = {}".format(full_csv_data.npartitions))
         read_successful = True
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
         read_successful = False
-
-    if full_csv_data.head().index[0] != 0:
-        full_csv_data = full_csv_data.reset_index()
-        full_csv_data = full_csv_data.iloc[:, :-1]
 
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
