@@ -182,7 +182,7 @@ def csv_checks(csv_filename, dataset_schema):
 
     if full_csv_data.head().index[0] != 0:
         full_csv_data = full_csv_data.reset_index()
-        full_csv_data = full_csv_data.drop("None", axis=1)
+        full_csv_data = full_csv_data.drop("{}".format(len(full_csv_data.columns)), axis=1)
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
@@ -191,25 +191,6 @@ def csv_checks(csv_filename, dataset_schema):
         # check for matching table in Bigquery
         fn = csv_filename.split("/")[-1]
         table_name_list = dataset_schema.table_name.unique()
-        """
-        # remove digits and replace underscores from both strings
-        fn_str = re.sub(r"\d+", "", fn.split(".")[0]).replace("_", " ").lower()
-        table_name_str = [
-            re.sub(r"\d+", "", x).replace("_", " ").lower().replace("estructura", "")
-            for x in table_name_list
-        ]
-        # create dictionary of table names with indexes
-        table_name_dict = {idx: el for idx, el in enumerate(table_name_str)}
-        # find top match Bigquery table
-        matched_table = process.extractOne(fn_str, table_name_dict, scorer=fuzz.token_sort_ratio)
-        logger.info(
-            "csv file name = {} matched with {}".format(fn, table_name_list[matched_table[2]])
-        )
-        # select subset dataset_schema
-        matched_table_schema = dataset_schema.loc[
-            dataset_schema.table_name == table_name_list[matched_table[2]]
-        ]
-        """
 
         # replace digits with x and remove extension
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
