@@ -159,7 +159,14 @@ def csv_checks(csv_filename, dataset_schema):
             csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=10
         )
         full_csv_data = dd.read_csv(
-            csv_filename, header=None, sep="|", engine="python", assume_missing=True, dtype="str"
+            csv_filename,
+            header=None,
+            sep="|",
+            engine="python",
+            assume_missing=True,
+            dtype="str",
+            quotechar='"',
+            error_bad_lines=False,
         )
 
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
