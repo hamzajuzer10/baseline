@@ -257,7 +257,7 @@ def csv_checks(csv_filename, dataset_schema):
             # remove duplicates
             full_csv_data.drop_duplicates(inplace=True)
             # reset index
-            full_csv_data.reset_index(drop=True, inplace=True)
+            full_csv_data = full_csv_data.reset_index(drop=True)
             # add timestamp column
             # full_csv_data["timestamp"] = re.findall("\d+",fn)
             # remove quotation marks
