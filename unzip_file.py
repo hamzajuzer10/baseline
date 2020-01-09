@@ -196,6 +196,10 @@ def csv_checks(csv_filename, dataset_schema):
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
+            # create dictionary columns:dtypes
+            for idx, col in enumerate(matched_table_schema.column_name.tolist()):
+                table_dtypes[col] = matched_table_schema.data_type.tolist()[idx]
+            logger.info(table_dtypes)
             # get first row of csv dataframe
             csv_header = list(csv_data.iloc[0])
             # logger.info(csv_header)
