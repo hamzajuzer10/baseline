@@ -259,7 +259,7 @@ def csv_checks(csv_filename, dataset_schema):
             # reset index
             full_csv_data = full_csv_data.reset_index(drop=True)
             # add timestamp column
-            # full_csv_data["timestamp"] = re.findall("\d+",fn)
+            full_csv_data["timestamp"] = re.findall("\d+", fn)
             # remove quotation marks
             # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
             # csv_data = csv_data.compute()
