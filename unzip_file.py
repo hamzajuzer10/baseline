@@ -182,7 +182,7 @@ def csv_checks(csv_filename, dataset_schema):
 
     if full_csv_data.head().index[0] != 0:
         full_csv_data = full_csv_data.reset_index()
-        full_csv_data = full_csv_data.drop("{}".format(len(full_csv_data.columns)), axis=1)
+        full_csv_data = full_csv_data.drop("{}".format(len(full_csv_data.columns) - 1), axis=1)
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
