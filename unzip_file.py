@@ -196,11 +196,10 @@ def csv_checks(csv_filename, dataset_schema):
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
             ]
-            table_dtypes = {}
             # create dictionary columns:dtypes
+            table_dtypes = {}
             for idx, col in enumerate(matched_table_schema.column_name.tolist()):
                 table_dtypes[col] = matched_table_schema.data_type.tolist()[idx]
-            logger.info(table_dtypes)
             # get first row of csv dataframe
             csv_header = list(csv_data.iloc[0])
             # logger.info(csv_header)
@@ -273,6 +272,13 @@ def csv_checks(csv_filename, dataset_schema):
             except:
                 logger.info("Could not parse csv")
                 # logger.info(csv_data.head())
+            # write to gbq
+            pandas_gbq.to_gbq(
+                full_csv_data.compute(),
+                "WIP." + table_mapping[fn_str] + "delta",
+                project_id=project_id,
+                if_exists="append",
+            )
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
