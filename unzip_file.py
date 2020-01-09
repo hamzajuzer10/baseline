@@ -186,7 +186,7 @@ def csv_checks(csv_filename, dataset_schema):
     temp_full_csv_data = dd.read_csv(
         csv_filename, header=None, sep="|", engine="python", assume_missing=True, dtype="str"
     )
-    logger.info("original csv dataframe has shape {}".format(temp_full_csv_data.shape.compute()))
+    logger.info("original csv dataframe has shape {}".format(temp_full_csv_data.shape))
 
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
@@ -275,7 +275,7 @@ def csv_checks(csv_filename, dataset_schema):
             except:
                 logger.info("Could not parse csv")
                 logger.info(csv_data.head())
-            logger.info("final dataframe has shape {}".format(full_csv_data.shape.compute()))
+            logger.info("final dataframe has shape {}".format(full_csv_data.shape))
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
 
