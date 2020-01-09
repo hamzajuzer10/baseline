@@ -145,10 +145,6 @@ def change_extension(old_extension, new_extension, directory):
             continue
 
 
-def read_csv_multi(csv_filename):
-    return pd.read_csv(csv_filename, header=None, index_col=False, sep="|", engine="python")
-
-
 def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
@@ -170,7 +166,7 @@ def csv_checks(csv_filename, dataset_schema):
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
         # logger.info(csv_data.head())
-        logger.info("first index value is {}".format(full_csv_data.head().index[0]))
+        # logger.info("first index value is {}".format(full_csv_data.head().index[0]))
         # if index is not default index reset index and drop last column
         if full_csv_data.head().index[0] != 0:
             full_csv_data = full_csv_data.reset_index()
@@ -261,7 +257,9 @@ def csv_checks(csv_filename, dataset_schema):
             # remove duplicates
             full_csv_data.drop_duplicates(inplace=True)
             # reset index
-            full_csv_data.reset_index(drop=True)
+            full_csv_data.reset_index(drop=True, inplace=True)
+            # add timestamp column
+            # full_csv_data["timestamp"] = re.findall("\d+",fn)
             # remove quotation marks
             # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
             # csv_data = csv_data.compute()
@@ -272,7 +270,6 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_data.head())
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
-        logger.info(full_csv_data.head())
     else:
         logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
 
