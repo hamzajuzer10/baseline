@@ -186,12 +186,6 @@ def csv_checks(csv_filename, dataset_schema):
     temp_full_csv_data = dd.read_csv(
         csv_filename, header=None, sep="|", engine="python", assume_missing=True, dtype="str"
     )
-    if fn_str in [
-        "XXXXXXXX_M_ARTICULOS_XXXXXXXX",
-        "XXXXXXXX_M_ARTICULOS_PROVEEDOR_XXXXXXXX",
-        "XXXXXXXX_M_OFER_PROMO",
-    ]:
-        logger.info("original csv dataframe has {} number of rows".format(len(temp_full_csv_data)))
 
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
@@ -204,6 +198,15 @@ def csv_checks(csv_filename, dataset_schema):
 
         # replace digits with x and remove extension
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
+
+        if fn_str in [
+            "XXXXXXXX_M_ARTICULOS_XXXXXXXX",
+            "XXXXXXXX_M_ARTICULOS_PROVEEDOR_XXXXXXXX",
+            "XXXXXXXX_M_OFER_PROMO",
+        ]:
+            logger.info(
+                "original csv dataframe has {} number of rows".format(len(temp_full_csv_data))
+            )
         # if file mapping exists for file name
         if table_mapping[fn_str] != "":
             # using mapping table select the correct schema
