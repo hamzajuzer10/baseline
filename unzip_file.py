@@ -162,6 +162,8 @@ def csv_checks(csv_filename, dataset_schema):
             csv_filename, header=None, sep="|", engine="python", assume_missing=True, dtype="str"
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
+        logger.info(csv_data.head())
+        logger.info(full_csv_data.head())
         logger.info("number of partitions = {}".format(full_csv_data.npartitions))
         read_successful = True
     except:
