@@ -169,13 +169,13 @@ def csv_checks(csv_filename, dataset_schema):
             error_bad_lines=False,
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
-        logger.info(csv_data.head())
+        # logger.info(csv_data.head())
         logger.info("first index value is {}".format(full_csv_data.head().index[0]))
         # if index is not default index reset index and drop last column
         if full_csv_data.head().index[0] != 0:
             full_csv_data = full_csv_data.reset_index()
             full_csv_data = full_csv_data.iloc[:, :-1]
-        logger.info(full_csv_data.head())
+        # logger.info(full_csv_data.head())
         logger.info("number of partitions = {}".format(full_csv_data.npartitions))
         read_successful = True
     except:
@@ -224,7 +224,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # add bq table column as header
                 full_csv_data.columns = table_columns
                 csv_data.columns = table_columns
-                logger.info(csv_data.head())
+                # logger.info(csv_data.head())
             else:
                 # not matched - error
                 logger.info("Headers do not match")
@@ -248,10 +248,10 @@ def csv_checks(csv_filename, dataset_schema):
             if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
                 # first row is the same as header
                 logger.info("dropping first row")
-                logger.info(full_csv_data.head())
+                # logger.info(full_csv_data.head())
                 full_csv_data = full_csv_data.loc[1:]
                 csv_data = csv_data.iloc[1:]
-                logger.info(full_csv_data.head())
+                # logger.info(full_csv_data.head())
                 # logger.info(csv_data.head())
             else:
                 # logger.info(csv_data.head())
@@ -269,16 +269,10 @@ def csv_checks(csv_filename, dataset_schema):
                 logger.info(full_csv_data.head())
             except:
                 logger.info("Could not parse csv")
-                logger.info(csv_data.head())
-            if fn_str in [
-                "XXXXXXXX_M_ARTICULOS_XXXXXXXX",
-                "XXXXXXXX_M_ARTICULOS_PROVEEDOR_XXXXXXXX",
-                "XXXXXXXX_M_OFER_PROMO",
-            ]:
-                logger.info("final dataframe has {} number of rows".format(len(full_csv_data)))
+                # logger.info(csv_data.head())
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
-
+        logger.info(full_csv_data.head())
     else:
         logger.info("Did not attempt to upload {} to Bigquery".format(csv_filename))
 
