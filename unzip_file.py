@@ -303,14 +303,22 @@ def csv_checks(csv_filename, dataset_schema):
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
 
             # write to gbq
-            logger.info("writing {} to bigquery......".format(fn_str))
-            pandas_gbq.to_gbq(
-                full_csv_data.compute(),
-                "WIP." + table_mapping[fn_str] + "_delta",
-                project_id=project_id,
-                if_exists="fail",
-            )
-            logger.info("completed writing {} to bigquery".format(fn_str))
+
+            try:
+                logger.info("attempting to write {} to bigquery......".format(fn))
+                pandas_gbq.to_gbq(
+                    full_csv_data.compute(),
+                    "WIP." + table_mapping[fn_str] + "_delta",
+                    project_id=project_id,
+                    if_exists="fail",
+                )
+                logger.info("completed writing {} to bigquery".format(fn))
+            except TableCreationError:
+                logger.info(
+                    "Table {} already exists, did not write to bigquery".format(
+                        table_mapping[fn_str]
+                    )
+                )
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
