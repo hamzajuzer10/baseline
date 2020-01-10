@@ -343,7 +343,7 @@ def skip_test(r, fn, ncolumns):
     f = open(fn, "r")
     data = f.read()
     for i, line in enumerate(data.splitlines()):
-        if (i == r) & len(re.findall("|", line)) < ncolumns:
+        if (i == r) and len(re.findall("|", line)) < ncolumns:
             return True
         elif i > r:
             break
