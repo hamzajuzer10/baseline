@@ -291,6 +291,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_data.head())
 
             # log final row count
+            """
             final_row_count = len(full_csv_data[full_csv_data.columns[0]])
             logger.info(
                 "original csv file {f} has {n} rows".format(
@@ -299,7 +300,7 @@ def csv_checks(csv_filename, dataset_schema):
             )
             logger.info("number of rows added = {r}".format(r=final_row_count))
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
-
+            """
             # write to gbq
             try:
                 logger.info("attempting to write {} to bigquery......".format(fn))
