@@ -2,6 +2,7 @@ import os
 import json
 from pathlib import Path
 from google.cloud import bigquery
+from google.cloud.bigquery import SchemaField as SF
 
 client = bigquery.Client()
 
@@ -19,29 +20,7 @@ job_config.autodetect = True
 job_config.skip_leading_rows = 1
 job_config.field_delimiter = ","
 
-s = """{
-  "fields": [
-    {
-      {
-        "name": "one",
-        "type": string
-      },
-      {
-        "name": "two",
-        "type": string
-      },
-      {
-        "name": "three",
-        "type": string
-      },
-      {
-        "name": "four",
-        "type": string
-      }
-    }
-  ]
-}"""
-schema = json.loads(s)
+schema = [SF("col1", "STRING"), SF("two", "STRING"), SF("three", "STRING"), SF("four", "STRING")]
 job_config.allow_jagged_rows = True
 job_config.schema = schema
 
