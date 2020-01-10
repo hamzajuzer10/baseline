@@ -278,7 +278,7 @@ def csv_checks(csv_filename, dataset_schema):
                 full_csv_data.compute(),
                 "WIP." + table_mapping[fn_str] + "_delta",
                 project_id=project_id,
-                if_exists="append",
+                if_exists="replace",
             )
             logger.info("completed writing {} to bigquery".format(fn_str))
         else:
