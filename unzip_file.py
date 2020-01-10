@@ -90,7 +90,7 @@ def initialise_logger():
     return logger
 
 
-def download_blob(bucket_name, source_blob_name, destination_file_name):
+def download_blob(bucket_name, source_blob_name, destination_file_name, replace=False):
     """Downloads a blob from the bucket."""
     # bucket_name = "your-bucket-name"
     # source_blob_name = "storage-object-name"
@@ -100,9 +100,18 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
 
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(source_blob_name)
-    blob.download_to_filename(destination_file_name)
-
-    logger.info("Blob {} downloaded to {}.".format(source_blob_name, destination_file_name))
+    # download blob depending on replace flag
+    if os.path.exists(destination_file_name) and replace:
+        logger.info(
+            "Blob {} already exists in {}...overwriting.".format(blob, destination_file_name)
+        )
+        blob.download_to_filename(destination_file_name)
+    elif os.path.exists(destination_file_name) and replace == False:
+        logger.info(
+            "Blob {} already exists in {}...skipping download.".format(blob, destination_file_name)
+        )
+    else:
+        logger.info("Blob {} downloaded to {}.".format(source_blob_name, destination_file_name))
 
 
 def gunzip(source_filepath, dest_filepath, block_size=65536):
@@ -118,7 +127,7 @@ def gunzip(source_filepath, dest_filepath, block_size=65536):
         d_file.write(block)
 
 
-def upload_blob(bucket_name, source_file_name, destination_blob_name):
+def upload_blob(bucket_name, source_file_name, destination_blob_name, replace=False):
     """Uploads a file to the bucket"""
     # bucket_name = "your-bucket-name"
     # source_file_name = "local/path/to/file"
@@ -128,9 +137,17 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
-    blob.upload_from_filename(source_file_name)
-
-    logger.info("File {} uploaded to {}.".format(source_file_name, destination_blob_name))
+    # upload file to GCS depending on replace flag
+    if blob.exists() and replace:
+        logger.info(
+            "GCS blob {b} exists already...overwriting blob".format(b=destination_blob_name)
+        )
+        blob.upload_from_filename(source_file_name)
+    elif blob.exists() and replace == False:
+        logger.info("GCS blob {} exists already...skipping upload".format(destination_blob_name))
+    else:
+        blob.upload_from_filename(source_file_name)
+        logger.info("File {} uploaded to {}.".format(source_file_name, destination_blob_name))
 
 
 def change_extension(old_extension, new_extension, directory):
@@ -149,6 +166,8 @@ def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
     logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
+    # read csv file nrows
+    csv_row_count = sum(1 for row in csv.reader(csv_filename))
     # read csv file into dataframe
     try:
         csv_data = pd.read_csv(
@@ -161,8 +180,8 @@ def csv_checks(csv_filename, dataset_schema):
             engine="python",
             assume_missing=True,
             dtype="str",
-            quotechar='"',
             error_bad_lines=False,
+            warn_bad_lines=False,
         )
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
         # logger.info(csv_data.head())
@@ -272,13 +291,24 @@ def csv_checks(csv_filename, dataset_schema):
             except:
                 logger.info("Could not parse csv")
                 # logger.info(csv_data.head())
+
+            # log final row count
+            final_row_count = len(full_csv_data.loc[:, [0]])
+            logger.info(
+                "original csv file {f} has {n} rows".format(
+                    f=csv_filename.split("/")[-1], n=csv_row_count
+                )
+            )
+            logger.info("number of rows added = {r}".format(r=final_row_count))
+            logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
+
             # write to gbq
             logger.info("writing {} to bigquery......".format(fn_str))
             pandas_gbq.to_gbq(
                 full_csv_data.compute(),
                 "WIP." + table_mapping[fn_str] + "_delta",
                 project_id=project_id,
-                if_exists="replace",
+                if_exists="fail",
             )
             logger.info("completed writing {} to bigquery".format(fn_str))
         else:
@@ -304,15 +334,7 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
-        # check if file exists
-        if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn)):
-            logger.info(
-                "Blob {} already exists in {}.".format(
-                    blob, os.path.abspath(local_dir + "/" + blob_fn)
-                )
-            )
-        else:
-            download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn))
+        download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
         if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
             logger.info(
                 "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
@@ -325,11 +347,12 @@ if __name__ == "__main__":
                 os.path.abspath(local_dir + "/" + blob_fn),
                 os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
             )
-        # upload_blob(
-        #     bucket,
-        #     os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-        #     "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
-        # )
+        upload_blob(
+            bucket,
+            os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+            "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
+            replace=True,
+        )
 
         # upload dataframe to Bigquery
         # pandas_gbq.to_gbq(blob_dataframe, )
