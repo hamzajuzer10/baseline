@@ -173,17 +173,7 @@ def csv_checks(csv_filename, dataset_schema):
         )
         # check ncolumns
         csv_column_count = len(csv_data.columns)
-        full_csv_data = dd.read_csv(
-            csv_filename,
-            header=None,
-            sep="|",
-            engine="python",
-            assume_missing=True,
-            dtype="str",
-            error_bad_lines=False,
-            warn_bad_lines=False,
-            skiprows=lambda x: skip_test(x, csv_filename, csv_column_count),
-        )
+
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
         # logger.info(csv_data.head())
         # logger.info("first index value is {}".format(full_csv_data.head().index[0]))
@@ -199,6 +189,17 @@ def csv_checks(csv_filename, dataset_schema):
         read_successful = False
 
     logger.info("number of columns = {}".format(csv_column_count))
+    full_csv_data = dd.read_csv(
+        csv_filename,
+        header=None,
+        sep="|",
+        engine="python",
+        assume_missing=True,
+        dtype="str",
+        error_bad_lines=False,
+        warn_bad_lines=False,
+        skiprows=lambda x: skip_test(x, csv_filename, csv_column_count),
+    )
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
@@ -343,7 +344,7 @@ def skip_test(r, fn, ncolumns):
     f = open(fn, "r")
     data = f.read()
     for i, line in enumerate(data.splitlines()):
-        if (i == r) and len(re.findall("|", line)) < ncolumns:
+        if (i == r) & len(re.findall("|", line)) < ncolumns:
             return True
         elif i > r:
             break
