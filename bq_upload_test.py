@@ -8,6 +8,10 @@ import pandas as pd
 
 client = bigquery.Client()
 
+# open table_mapping.json
+with open("table_mapping.json", "r") as mapping:
+    table_mapping = json.load(mapping)
+
 home = str(Path.home())
 filename = os.path.abspath(home + "/etl_test/20191128_M_ARTICULOS_20191128.csv")
 dataset_id = "WIP"
