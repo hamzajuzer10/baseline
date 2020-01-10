@@ -26,7 +26,7 @@ job_config.field_delimiter = ","
 schema = []
 column_names = ["one", "two", "three", "four"]
 for i in column_names:
-    x.append(SF(i, "STRING"))
+    schema.append(SF(i, "STRING"))
 
 job_config.allow_jagged_rows = True
 job_config.schema = schema
