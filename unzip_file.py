@@ -208,8 +208,7 @@ def csv_checks(csv_filename, dataset_schema):
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
 
         # if file mapping exists for file name
-        if table_mapping[fn_str] == "11_M_ARTICULOS":
-            # if table_mapping[fn_str] != "":
+        if table_mapping[fn_str] != "":
             # using mapping table select the correct schema
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
@@ -340,24 +339,26 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
-        logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
-        download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
-        if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
-            logger.info(
-                "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
-            )
-            csv_checks(
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"), dataset_schema
-            )
-        else:
-            gunzip(
-                os.path.abspath(local_dir + "/" + blob_fn),
+        if blob_fn == "20191128_M_ARTICULOS_20191128.dat.gz":
+            logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
+            download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
+            if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
+                logger.info(
+                    "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
+                )
+                csv_checks(
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                    dataset_schema,
+                )
+            else:
+                gunzip(
+                    os.path.abspath(local_dir + "/" + blob_fn),
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                )
+            upload_blob(
+                bucket,
                 os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
+                replace=False,
             )
-        upload_blob(
-            bucket,
-            os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-            "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
-            replace=False,
-        )
-        logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
+            logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
