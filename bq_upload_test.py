@@ -16,11 +16,18 @@ table_ref = dataset_ref.table(table_id)
 job_config = bigquery.LoadJobConfig()
 job_config.source_format = bigquery.SourceFormat.CSV
 job_config.autodetect = True
-
+job_config.write_disposition = "WRITE_TRUNCATE"
 job_config.skip_leading_rows = 1
 job_config.field_delimiter = ","
 
-schema = [SF("col1", "STRING"), SF("two", "STRING"), SF("three", "STRING"), SF("four", "STRING")]
+# schema = [SF("col1", "STRING"), SF("two", "STRING"), SF("three", "STRING"), SF("four", "STRING")]
+# schema = [SF(a, b), SF("two", "STRING"), SF("three", "STRING"), SF("four", "STRING")]
+
+schema = []
+column_names = ["one", "two", "three", "four"]
+for i in column_names:
+    x.append(SF(i, "STRING"))
+
 job_config.allow_jagged_rows = True
 job_config.schema = schema
 
