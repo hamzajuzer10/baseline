@@ -171,6 +171,8 @@ def csv_checks(csv_filename, dataset_schema):
         csv_data = pd.read_csv(
             csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=10
         )
+        # check ncolumns
+        # csv_column_count = len(csv_data.columns)
         full_csv_data = dd.read_csv(
             csv_filename,
             header=None,
@@ -195,6 +197,8 @@ def csv_checks(csv_filename, dataset_schema):
         logger.info("csv file: {} did not read properly".format(csv_filename))
         read_successful = False
 
+    csv_column_count = len(csv_data.columns)
+    logging.info("number of columns = {}".format(csv_column_count))
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
@@ -333,6 +337,17 @@ def get_bq_schemas(dataset_id):
     # read from Bigquery
     dataset_schema = pandas_gbq.read_gbq(sql_str, project_id=project_id)
     return dataset_schema
+
+
+def skip_test(r, fn, fail_on, ncolumns):
+    f = open(fn, "r")
+    data = f.read()
+    for i, line in enumerate(data.splitlines()):
+        if (i == r) & len(re.findall("|", line)) < ncolumns:
+            return True
+        elif i > r:
+            break
+    return False
 
 
 if __name__ == "__main__":
