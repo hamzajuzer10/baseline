@@ -167,7 +167,7 @@ def csv_checks(csv_filename, dataset_schema):
 
     logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
     # read csv file nrows
-    csv_row_count = sum(1 for row in csv.reader(csv_filename))
+    csv_row_count = sum(1 for row in csv.reader(open(csv_filename)))
     # read csv file into dataframe
     try:
         csv_data = pd.read_csv(
