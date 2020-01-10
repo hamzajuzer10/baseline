@@ -340,7 +340,7 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
-        if blob_fn == "20191128_M_ARTICULOS_20191128.dat.gz":
+        if blob_fn == "20191128_M_COMPETITIVIDAD_20191128.dat.gz":
             logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
             download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
             if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
