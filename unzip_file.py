@@ -139,9 +139,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name, replace=Fa
 
     # upload file to GCS depending on replace flag
     if blob.exists() and replace:
-        logger.info(
-            "GCS blob {b} exists already...overwriting blob".format(b=destination_blob_name)
-        )
+        logger.info("Overwriting GCS blob {b}".format(b=destination_blob_name))
         blob.upload_from_filename(source_file_name)
     elif blob.exists() and replace == False:
         logger.info("GCS blob {} exists already...skipping upload".format(destination_blob_name))
@@ -165,7 +163,7 @@ def change_extension(old_extension, new_extension, directory):
 def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
-    logger.info("-------------Beginning checks for {}-------------".format(csv_filename))
+    logger.info(".........beginning checks for {}.........".format(csv_filename))
     # read csv file nrows
     csv_row_count = sum(1 for row in csv.reader(open(csv_filename)))
     # read csv file into dataframe
@@ -210,7 +208,8 @@ def csv_checks(csv_filename, dataset_schema):
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
 
         # if file mapping exists for file name
-        if table_mapping[fn_str] != "":
+        if table_mapping[fn_str] == "11_M_ARTICULOS":
+            # if table_mapping[fn_str] != "":
             # using mapping table select the correct schema
             matched_table_schema = dataset_schema.loc[
                 dataset_schema.table_name == table_mapping[fn_str]
@@ -293,7 +292,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_data.head())
 
             # log final row count
-            final_row_count = len(full_csv_data.iloc[:, [0]])
+            final_row_count = len(full_csv_data.columns[0])
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
@@ -341,6 +340,7 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
+        logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
         download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
         if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
             logger.info(
@@ -358,8 +358,6 @@ if __name__ == "__main__":
             bucket,
             os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
             "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
-            replace=True,
+            replace=False,
         )
-
-        # upload dataframe to Bigquery
-        # pandas_gbq.to_gbq(blob_dataframe, )
+        logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
