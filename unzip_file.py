@@ -303,7 +303,6 @@ def csv_checks(csv_filename, dataset_schema):
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
 
             # write to gbq
-
             try:
                 logger.info("attempting to write {} to bigquery......".format(fn))
                 pandas_gbq.to_gbq(
@@ -313,7 +312,7 @@ def csv_checks(csv_filename, dataset_schema):
                     if_exists="fail",
                 )
                 logger.info("completed writing {} to bigquery".format(fn))
-            except TableCreationError:
+            except pandas_gbq.gbq.TableCreationError:
                 logger.info(
                     "Table {} already exists, did not write to bigquery".format(
                         table_mapping[fn_str]
