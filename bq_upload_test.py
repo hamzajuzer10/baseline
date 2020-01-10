@@ -8,10 +8,6 @@ import pandas as pd
 
 client = bigquery.Client()
 
-# open table_mapping.json
-with open("table_mapping.json", "r") as mapping:
-    table_mapping = json.load(mapping)
-
 home = str(Path.home())
 filename = os.path.abspath(home + "/etl_test/20191128_M_ARTICULOS_20191128.csv")
 dataset_id = "WIP"
@@ -31,9 +27,7 @@ job_config.field_delimiter = "|"
 # schema = [SF(a, b), SF("two", "STRING"), SF("three", "STRING"), SF("four", "STRING")]
 
 dataset_schema = unzip_file.get_bq_schemas("source_data")
-matched_table_schema = dataset_schema.loc[
-    dataset_schema.table_name == table_mapping["11_M_ARTICULOS"]
-]
+matched_table_schema = dataset_schema.loc[dataset_schema.table_name == "11_M_ARTICULOS"]
 table_columns = matched_table_schema.column_name.tolist()
 
 schema = []
