@@ -293,7 +293,7 @@ def csv_checks(csv_filename, dataset_schema):
                 # logger.info(csv_data.head())
 
             # log final row count
-            final_row_count = len(full_csv_data.loc[:, 0])
+            final_row_count = len(full_csv_data.iloc[:, [0]])
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
