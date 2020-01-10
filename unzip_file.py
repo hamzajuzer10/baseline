@@ -198,7 +198,7 @@ def csv_checks(csv_filename, dataset_schema):
         read_successful = False
 
     csv_column_count = len(csv_data.columns)
-    logging.info("number of columns = {}".format(csv_column_count))
+    logger.info("number of columns = {}".format(csv_column_count))
     # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
     # check csv dataframe is not empty
     # if csv_data.empty == False:
