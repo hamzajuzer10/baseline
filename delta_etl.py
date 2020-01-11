@@ -10,6 +10,7 @@
 from google.cloud import storage
 from google.cloud import bigquery
 from google.cloud.bigquery import SchemaField as SF
+from google.cloud.bigquery import TimePartitioning as TP
 
 # file/system imports
 import os
@@ -103,7 +104,13 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
 def bq_add_timestamp(table_id, timestamp):
     """Query bigquery and add timestamp"""
     table_ref = dataset_ref.table(table_id)
-    job_config = bigquery.QueryJobConfig(destination=table_ref)
+    job_config = bigquery.QueryJobConfig()
+    job_config.destination = table_ref
+    job_config.dry_run = True
+    job_config.write_disposition = "WRITE_TRUNCATE"
+    job_config.create_disposition = "CREATE_NEVER"
+    job_config.use_query_cache = True
+    # job_config.time_partitioning = TP(type_="DAY", field="TIMESTAMP")
 
     sql = """
         SELECT *, {t} as TIMESTAMP
@@ -117,6 +124,24 @@ def bq_add_timestamp(table_id, timestamp):
     query_job.result()  # Wait for the job to complete.
 
     logger.info("Query results loaded to the table {}".format(table_id))
+
+
+def get_bq_row_count(table_id):
+    """Query bigquery"""
+    table_ref = dataset_ref.table(table_id)
+    job_config = bigquery.QueryJobConfig()
+    job_config.use_query_cache = True
+
+    sql = """
+        SELECT COUNT(*)
+        FROM `{table}`;
+    """.format(
+        table=table_ref
+    )
+
+    # Start the query, passing in the extra configuration.
+    query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
+    return query_job.result()  # Wait for the job to complete.
 
 
 def initialise_logger():
@@ -272,21 +297,15 @@ def csv_checks(csv_filename, dataset_schema):
                 # write to bq without header row
                 bq_write(csv_filename, table_mapping[fn_str] + "_delta", 1, table_dtypes)
                 logger.info("Finished writing to bigquery")
-                logger.info("Adding timestamp column to table")
-                bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
             else:
                 logger.info("CSV header does not exist...writing {} to bigquery".format(fn))
                 bq_write(csv_filename, table_mapping[fn_str] + "_delta", 0, table_dtypes)
 
-            try:
-                logger.info(full_csv_data.head())
-            except:
-                logger.info("Could not parse csv")
-                # logger.info(csv_data.head())
+            logger.info("Adding timestamp column to table")
+            bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
 
             # log final row count
-            """
-            final_row_count = len(full_csv_data[full_csv_data.columns[0]])
+            final_row_count = get_bq_row_count(table_mapping[fn_str])
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
@@ -294,7 +313,6 @@ def csv_checks(csv_filename, dataset_schema):
             )
             logger.info("number of rows added = {r}".format(r=final_row_count))
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
-            """
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
