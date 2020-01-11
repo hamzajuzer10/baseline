@@ -59,12 +59,14 @@ project_id = "gum-eroski-dev"
 # define read GCP parameters
 dataset_id = "source_data"
 bucket = "erk-data-feed"
-blobs = storage_client.list_blobs(bucket, prefix="Working_folder/AT/ETL_test/")
+storage_filepath = "Working_folder/AT/ETL_test/"
+blobs = storage_client.list_blobs(bucket, prefix=storage_filepath)
 blob_list = [blob.name for blob in blobs]
 
 # define write GCP parameters
 write_dataset_id = "delta_data"
 dataset_ref = bq_client.dataset(write_dataset_id)
+write_storage_filepath = "Working_folder/AT/ETL_test_upload/"
 
 # define compute local disk file directory locations
 home = str(Path.home())
@@ -346,7 +348,7 @@ if __name__ == "__main__":
             upload_blob(
                 bucket,
                 os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
+                write_storage_filepath + blob_fn.split(".")[0] + ".csv",
                 replace=False,
             )
         else:
