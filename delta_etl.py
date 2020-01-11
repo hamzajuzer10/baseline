@@ -100,6 +100,25 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
     job.result()  # Waits for table load to complete.
 
 
+def bq_add_timestamp(table_id, timestamp):
+    """Query bigquery and add timestamp"""
+    table_ref = dataset_ref.table(table_id)
+    job_config = bigquery.QueryJobConfig(destination=table_ref)
+
+    sql = """
+        SELECT *, {t} as TIMESTAMP
+        FROM `{table}`;
+    """.format(
+        t=timestamp, table=table_ref
+    )
+
+    # Start the query, passing in the extra configuration.
+    query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
+    query_job.result()  # Wait for the job to complete.
+
+    logger.info("Query results loaded to the table {}".format(table_id))
+
+
 def initialise_logger():
     """Initialise logger settings"""
 
@@ -201,52 +220,27 @@ def csv_checks(csv_filename, dataset_schema):
     """Checks format of delta csv files with Bigquery tables"""
 
     logger.info(".........beginning checks for {}.........".format(csv_filename))
-    # read csv file nrows
+    # check csv file nrows
     csv_row_count = sum(1 for row in csv.reader(open(csv_filename)))
-    # read csv file into dataframe
+    # read top 5 lines of csv file into dataframe
     try:
         csv_data = pd.read_csv(
-            csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=10
+            csv_filename, header=None, index_col=False, sep="|", engine="python", nrows=5
         )
         # check ncolumns
         csv_column_count = len(csv_data.columns)
-
         logger.info("csv file: {} loaded to dataframe".format(csv_filename))
-        # logger.info(csv_data.head())
-        # logger.info("first index value is {}".format(full_csv_data.head().index[0]))
-        # if index is not default index reset index and drop last column
-        if full_csv_data.head().index[0] != 0:
-            full_csv_data = full_csv_data.reset_index()
-            full_csv_data = full_csv_data.iloc[:, :-1]
-        # logger.info(full_csv_data.head())
-        logger.info("number of partitions = {}".format(full_csv_data.npartitions))
         read_successful = True
     except:
         logger.info("csv file: {} did not read properly".format(csv_filename))
         read_successful = False
 
-    logger.info("number of columns = {}".format(csv_column_count))
-    full_csv_data = dd.read_csv(
-        csv_filename,
-        header=None,
-        sep="|",
-        engine="python",
-        assume_missing=True,
-        dtype="str",
-        error_bad_lines=False,
-        warn_bad_lines=False,
-        skiprows=lambda x: skip_test(x, csv_filename, csv_column_count),
-    )
-    # csv_data = dd.read_csv(csv_filename, header=None, sep="|", engine="python", assume_missing=True)
-    # check csv dataframe is not empty
-    # if csv_data.empty == False:
     if read_successful:
-        # logger.info(csv_data.describe(include="all"))
         # check for matching table in Bigquery
         fn = csv_filename.split("/")[-1]
         table_name_list = dataset_schema.table_name.unique()
 
-        # replace digits with x and remove extension
+        # replace digits with X and remove extension
         fn_str = re.sub(r"\d", "X", fn.split(".")[0])
 
         # if file mapping exists for file name
@@ -261,71 +255,29 @@ def csv_checks(csv_filename, dataset_schema):
                 table_dtypes[col] = matched_table_schema.data_type.tolist()[idx]
             # get first row of csv dataframe
             csv_header = list(csv_data.iloc[0])
-            # logger.info(csv_header)
+
             # get column names of bq table
             table_columns = matched_table_schema.column_name.tolist()
-            # logger.info(table_columns)
-            # compare csv headers and column names
+
+            # compare csv first row and bq table column names
             csv_header = [str(x).lower() for x in csv_header]
             table_columns_lower = [x.lower() for x in table_columns]
             if len(csv_header) == len(table_columns_lower) and len(csv_header) == sum(
                 [1 for i, j in zip(csv_header, table_columns_lower) if i == j]
+                or csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]
             ):
-                logger.info("HEADERS MATCHED")
-                # use first row as header and drop
-                full_csv_data.columns = table_columns
-                csv_data.columns = table_columns
-                full_csv_data = full_csv_data.loc[1:]
-                csv_data = csv_data.iloc[1:]
-            elif len(csv_header) == len(table_columns):
-                # same csv header count and bq table column count
-                logger.info("Adding headers to {}".format(fn))
-                # add bq table column as header
-                full_csv_data.columns = table_columns
-                csv_data.columns = table_columns
-                # logger.info(csv_data.head())
+                logger.info(
+                    "CSV header exists...writing {} to bigquery without header row".format(fn)
+                )
+                # write to bq without header row
+                bq_write(csv_filename, table_mapping[fn_str] + "_delta", 1, table_dtypes)
+                logger.info("Finished writing to bigquery")
+                logger.info("Adding timestamp column to table")
+                bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
             else:
-                # not matched - error
-                logger.info("Headers do not match")
-                # add bq table column as headers
-                # logger.info(csv_data.head())
-                logger.info("csv has {a} columns".format(a=len(csv_header)))
-                logger.info("bq table has {b} columns".format(b=len(table_columns)))
-                # add blank columns missing from bq table to csv dataframe
-                for c in range(1, len(table_columns) + 1 - len(csv_header)):
-                    full_csv_data["new_column_{}".format(c)] = np.nan
-                    csv_data["new_column_{}".format(c)] = np.nan
-                    logger.info("empty column added!")
-                # logger.info(csv_data.head())
-                assert full_csv_data.shape[1] == len(table_columns)
-                # add bq table column as headers
-                full_csv_data.columns = table_columns
-                csv_data.columns = table_columns
-                # logger.info(csv_data.head())
+                logger.info("CSV header does not exist...writing {} to bigquery".format(fn))
+                bq_write(csv_filename, table_mapping[fn_str] + "_delta", 0, table_dtypes)
 
-                # logger.info("Did not attempt to upload {} to Bigquery".format(fn))
-            if csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]:
-                # first row is the same as header
-                logger.info("dropping first row")
-                # logger.info(full_csv_data.head())
-                full_csv_data = full_csv_data.loc[1:]
-                csv_data = csv_data.iloc[1:]
-                # logger.info(full_csv_data.head())
-                # logger.info(csv_data.head())
-            else:
-                # logger.info(csv_data.head())
-                logger.info("matched bq table")
-
-            # clean up csv_data
-            # remove duplicates
-            full_csv_data.drop_duplicates(inplace=True)
-            # reset index
-            full_csv_data = full_csv_data.reset_index(drop=True)
-            # add timestamp column
-            full_csv_data["TIMESTAMP"] = re.findall("\d+", fn)[0]
-            # remove quotation marks
-            # full_csv_data = full_csv_data.map_partitions(lambda d: d.replace('"', ""))
-            # csv_data = csv_data.compute()
             try:
                 logger.info(full_csv_data.head())
             except:
@@ -343,22 +295,6 @@ def csv_checks(csv_filename, dataset_schema):
             logger.info("number of rows added = {r}".format(r=final_row_count))
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
             """
-            # write to gbq
-            try:
-                logger.info("attempting to write {} to bigquery......".format(fn))
-                pandas_gbq.to_gbq(
-                    full_csv_data.compute(),
-                    "WIP." + table_mapping[fn_str] + "_delta",
-                    project_id=project_id,
-                    if_exists="fail",
-                )
-                logger.info("completed writing {} to bigquery".format(fn))
-            except pandas_gbq.gbq.TableCreationError:
-                logger.info(
-                    "Table {} already exists, did not write to bigquery".format(
-                        table_mapping[fn_str]
-                    )
-                )
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
@@ -377,17 +313,6 @@ def get_bq_schemas(dataset_id):
     return dataset_schema
 
 
-def skip_test(r, fn, ncolumns):
-    f = open(fn, "r")
-    data = f.read()
-    for i, line in enumerate(data.splitlines()):
-        if (i == r) & len(re.findall("|", line)) < ncolumns:
-            return True
-        elif i > r:
-            break
-    return False
-
-
 if __name__ == "__main__":
     logger = initialise_logger()
     dataset_schema = get_bq_schemas(dataset_id)
@@ -395,22 +320,22 @@ if __name__ == "__main__":
         blob_fn = blob.split("/")[-1]
         logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
         download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
-        if os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
+        while not os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
+            gunzip(
+                os.path.abspath(local_dir + "/" + blob_fn),
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+            )
+            upload_blob(
+                bucket,
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
+                replace=False,
+            )
+        else:
             logger.info(
                 "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
             )
             csv_checks(
                 os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"), dataset_schema,
             )
-        else:
-            gunzip(
-                os.path.abspath(local_dir + "/" + blob_fn),
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-            )
-        upload_blob(
-            bucket,
-            os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-            "Working_folder/AT/ETL_test_upload/" + blob_fn.split(".")[0] + ".csv",
-            replace=False,
-        )
         logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
