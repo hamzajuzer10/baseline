@@ -5,62 +5,99 @@
 # 4. upload csv to GCS
 # 5. upload dataframe to Bigquery
 
+# ===================library imports===================#
+# GCP client library imports
 from google.cloud import storage
+from google.cloud import bigquery
+from google.cloud.bigquery import SchemaField as SF
+
+# file/system imports
 import os
 import gzip
 import shutil
 from pathlib import Path
+import csv
+import json
+import logging
+import sys
+from multiprocessing import Pool
+
+# dataframe imports
 import pandas_gbq
 import pandas as pd
 import numpy as np
-import logging
-import re
-import json
-from fuzzywuzzy import process, fuzz
 from dask.distributed import Client as dClient
 import dask.dataframe as dd
-from multiprocessing import Pool
 
-# --------------------------
-# to handle large csv fields
-import sys
-import csv
+# string processing imports
+import re
+from fuzzywuzzy import process, fuzz
 
+# =====================================================#
+
+# ------to handle large csv fields--------#
 maxInt = sys.maxsize
-
 while True:
     # decrease the maxInt value by factor 10
     # as long as the OverflowError occurs.
-
     try:
         csv.field_size_limit(maxInt)
         break
     except OverflowError:
         maxInt = int(maxInt / 10)
-# --------------------------
+# ----------------------------------------#
 
-# Create a local dask cluster with workers in same process
-# dask_client = dClient(processes=False)
-
-# Instantiates a client
+# ===================set up ====================#
+# Instantiates a GCP storage client
 storage_client = storage.Client()
+bq_client = bigquery.Client()
 
+# define general GCP parameters
 project_id = "gum-eroski-dev"
+
+# define read GCP parameters
 dataset_id = "source_data"
 bucket = "erk-data-feed"
 blobs = storage_client.list_blobs(bucket, prefix="Working_folder/AT/ETL_test/")
-
 blob_list = [blob.name for blob in blobs]
-blob_fname = [blob.split("/")[-1] for blob in blob_list]
-# print(blob_list)
 
+# define write GCP parameters
+write_dataset_id = "delta_data"
+dataset_ref = bq_client.dataset(write_dataset_id)
+
+# define compute local disk file directory locations
 home = str(Path.home())
 local_dir = os.path.abspath(home + "/etl_test/")
-# local_directory = os.fsencode("~/etl_test/")
 
-# open table_mapping.json
+# open table_mapping.json for delta to bq table mapping
 with open("table_mapping.json", "r") as mapping:
     table_mapping = json.load(mapping)
+# =====================================================#
+
+# ===================function definitions====================#
+
+
+def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
+    """Write to bigquery"""
+    table_ref = dataset_ref.table(table_id)
+    job_config = bigquery.LoadJobConfig()
+    job_config.source_format = bigquery.SourceFormat.CSV
+    job_config.write_disposition = "WRITE_TRUNCATE"
+    job_config.skip_leading_rows = header
+    job_config.allow_jagged_rows = True
+    job_config.field_delimiter = "|"
+    job_config.max_bad_records = 10000
+
+    # set write schema using original bq table
+    schema = []
+    for i in table_dtypes:
+        schema.append(SF(i, table_dtypes[i]))
+    job_config.schema = schema
+
+    # write file to bigquery
+    with open(fpath, "rb") as source_file:
+        job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+    job.result()  # Waits for table load to complete.
 
 
 def initialise_logger():
