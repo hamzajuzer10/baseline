@@ -86,6 +86,7 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict, original_row
     table_ref = dataset_ref.table(table_id)
     job_config = bigquery.LoadJobConfig()
     job_config.source_format = bigquery.SourceFormat.CSV
+    job_config.autodetect = True
     job_config.write_disposition = "WRITE_TRUNCATE"
     job_config.skip_leading_rows = header
     job_config.allow_jagged_rows = True
