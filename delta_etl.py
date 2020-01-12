@@ -111,8 +111,8 @@ def bq_add_timestamp(table_id, timestamp):
     job_config = bigquery.QueryJobConfig()
     job_config.destination = table_ref
     job_config.dry_run = False
-    job_config.write_disposition = "WRITE_TRUNCATE"
-    job_config.create_disposition = "CREATE_NEVER"
+    job_config.write_disposition = "WRITE_APPEND"
+    # job_config.create_disposition = "CREATE_NEVER"
     job_config.use_query_cache = True
     # job_config.time_partitioning = TP(type_="DAY", field="TIMESTAMP")
 
@@ -120,7 +120,7 @@ def bq_add_timestamp(table_id, timestamp):
         SELECT *, {t} as TIMESTAMP
         FROM `{table}`;
     """.format(
-        t=timestamp, table=table_ref
+        t=timestamp, table=table_ref + "_delta"
     )
 
     # Start the query, passing in the extra configuration.
@@ -372,7 +372,7 @@ def csv_checks(csv_filename, dataset_schema):
                 )
 
             logger.info("Adding timestamp column to table")
-            bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
+            bq_add_timestamp(table_mapping[fn_str], re.findall("\d+", fn)[0])
 
             # log final row count
             final_row_count = bq_get_row_count(table_mapping[fn_str] + "_delta") + header_row
