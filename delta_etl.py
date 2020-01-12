@@ -59,7 +59,7 @@ project_id = "gum-eroski-dev"
 # define read GCP parameters
 dataset_id = "source_data"
 bucket = "erk-data-feed"
-storage_filepath = "Working_folder/AT/ETL_test/"
+storage_filepath = "eroski-deltas/20191205/"
 blobs = storage_client.list_blobs(bucket, prefix=storage_filepath)
 blob_list = [blob.name for blob in blobs]
 
