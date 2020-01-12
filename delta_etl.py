@@ -141,7 +141,7 @@ def bq_get_summary_stats(table_id):
           SELECT * FROM `{table}`
         ),
         table_as_json AS (
-          SELECT  REGEXP_REPLACE(TO_JSON_STRING(t), r'^\{|\}$', '') AS row
+          SELECT  REGEXP_REPLACE(TO_JSON_STRING(t), r'^{{|}}$', '') AS row
           FROM `table` AS t
         ),
         pairs AS (
