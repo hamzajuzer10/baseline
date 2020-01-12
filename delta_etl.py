@@ -303,14 +303,18 @@ def csv_checks(csv_filename, dataset_schema):
                 bq_write(csv_filename, table_mapping[fn_str] + "_delta", 1, table_dtypes)
                 logger.info("Finished writing to bigquery")
             else:
-                logger.info("CSV header does not exist...writing {} to bigquery".format(fn))
+                logger.info(
+                    "CSV header does not exist...writing {} to bigquery applying original source data headers".format(
+                        fn
+                    )
+                )
                 bq_write(csv_filename, table_mapping[fn_str] + "_delta", 0, table_dtypes)
 
             logger.info("Adding timestamp column to table")
             bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
 
             # log final row count
-            final_row_count = get_bq_row_count(table_mapping[fn_str])
+            final_row_count = get_bq_row_count(table_mapping[fn_str] + "_delta")
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
