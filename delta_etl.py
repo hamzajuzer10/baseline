@@ -116,13 +116,6 @@ def bq_add_timestamp(table_id, timestamp):
     job_config.use_query_cache = True
     # job_config.time_partitioning = TP(type_="DAY", field="TIMESTAMP")
 
-    table = bq_client.get_table(table_ref)  # Make an API request.
-    original_schema = table.schema
-    new_schema = original_schema[:]  # Creates a copy of the schema.
-    new_schema.append(SF("TIMESTAMP", "DATE"))
-    table.schema = new_schema
-    table_update = bq_client.update_table(table, ["schema"])  # Make an API request.
-
     sql = """
         SELECT *, {t} as TIMESTAMP
         FROM `{table}`;
@@ -133,6 +126,13 @@ def bq_add_timestamp(table_id, timestamp):
     # Start the query, passing in the extra configuration.
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
     query_job.result()  # Wait for the job to complete.
+
+    table = bq_client.get_table(table_ref)  # Make an API request.
+    original_schema = table.schema
+    new_schema = original_schema[:]  # Creates a copy of the schema.
+    new_schema[-1] = SF("TIMESTAMP", "DATE")
+    table.schema = new_schema
+    table_update = bq_client.update_table(table, ["schema"])  # Make an API request.
 
     logger.info("Timestamp added to bq table {}".format(table_id))
 
