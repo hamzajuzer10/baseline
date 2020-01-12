@@ -143,7 +143,7 @@ def get_bq_row_count(table_id):
 
     # Start the query, passing in the extra configuration.
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
-    return query_job.result().to_dataframe().iloc[0]  # return the first result (count of rows)
+    return query_job.result().to_dataframe().f0_.iloc[0]  # return the first result (count of rows)
 
 
 def initialise_logger():
@@ -300,7 +300,8 @@ def csv_checks(csv_filename, dataset_schema):
                     "CSV header exists...writing {} to bigquery without first row".format(fn)
                 )
                 # write to bq without header row
-                bq_write(csv_filename, table_mapping[fn_str] + "_delta", 1, table_dtypes)
+                header_row = 1
+                bq_write(csv_filename, table_mapping[fn_str] + "_delta", header_row, table_dtypes)
                 logger.info("Finished writing to bigquery")
             else:
                 logger.info(
@@ -308,13 +309,14 @@ def csv_checks(csv_filename, dataset_schema):
                         fn
                     )
                 )
-                bq_write(csv_filename, table_mapping[fn_str] + "_delta", 0, table_dtypes)
+                header_row = 0
+                bq_write(csv_filename, table_mapping[fn_str] + "_delta", header_row, table_dtypes)
 
             logger.info("Adding timestamp column to table")
             bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
 
             # log final row count
-            final_row_count = get_bq_row_count(table_mapping[fn_str] + "_delta")
+            final_row_count = get_bq_row_count(table_mapping[fn_str] + "_delta") + header_row
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
