@@ -130,8 +130,52 @@ def bq_add_timestamp(table_id, timestamp):
     logger.info("Timestamp added to bq table {}".format(table_id))
 
 
-def get_bq_row_count(table_id):
-    """Query bigquery"""
+def bq_get_row_count(table_id):
+    """Return row count of bigquery table"""
+    table_ref = project_id + "." + write_dataset_id + "." + table_id
+    job_config = bigquery.QueryJobConfig()
+    job_config.use_query_cache = True
+
+    sql = """
+        WITH `table` AS (
+          SELECT * FROM `{table}`
+        ),
+        table_as_json AS (
+          SELECT  REGEXP_REPLACE(TO_JSON_STRING(t), r'^{|}$', '') AS row
+          FROM `table` AS t
+        ),
+        pairs AS (
+          SELECT
+            REPLACE(column_name, '"', '') AS column_name,
+            IF(SAFE_CAST(column_value AS STRING)='null',NULL,column_value) AS column_value,
+            IF(SAFE_CAST(column_value AS numeric) is null, NULL, SAFE_CAST(column_value AS numeric)) AS col_nu
+          FROM table_as_json, UNNEST(SPLIT(row, ',"')) AS z,
+          UNNEST([SPLIT(z, ':')[SAFE_OFFSET(0)]]) AS column_name,
+          UNNEST([SPLIT(z, ':')[SAFE_OFFSET(1)]]) AS column_value
+        )
+        SELECT
+          column_name,
+          COUNT(DISTINCT column_value) AS distinct_values,
+          COUNTIF(column_value IS NULL) AS no_nulls,
+          COUNTIF(column_value IS NOT NULL) AS no_non_nulls,
+          ROUND(AVG(col_nu),1) AS avg_value,
+          MAX(col_nu) AS max_value,
+          MIN(col_nu) AS min_value
+        FROM pairs
+        WHERE column_name <> ''
+        GROUP BY column_name
+        ORDER BY column_name
+    """.format(
+        table=table_ref
+    )
+
+    # Start the query, passing in the extra configuration.
+    query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
+    return query_job.result().to_dataframe()  # return the first result (count of rows)
+
+
+def bq_get_summary_stats(table_id):
+    """Return summary statistics of bigquery table"""
     table_ref = project_id + "." + write_dataset_id + "." + table_id
     job_config = bigquery.QueryJobConfig()
     job_config.use_query_cache = True
@@ -330,7 +374,7 @@ def csv_checks(csv_filename, dataset_schema):
             bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
 
             # log final row count
-            final_row_count = get_bq_row_count(table_mapping[fn_str] + "_delta") + header_row
+            final_row_count = bq_get_row_count(table_mapping[fn_str] + "_delta") + header_row
             logger.info(
                 "original csv file {f} has {n} rows".format(
                     f=csv_filename.split("/")[-1], n=csv_row_count
@@ -338,6 +382,16 @@ def csv_checks(csv_filename, dataset_schema):
             )
             logger.info("number of rows added = {r}".format(r=final_row_count))
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
+            summary_stats = bq_get_summary_stats(table_mapping[fn_str] + "_delta")
+            summary_stats.to_csv(
+                os.path.abspath(local_dir + "/" + fn.split(".")[0] + "_summary_stats" + ".csv")
+            )
+            upload_blob(
+                bucket,
+                os.path.abspath(local_dir + "/" + fn.split(".")[0] + "_summary_stats" + ".csv"),
+                write_storage_filepath + fn.split(".")[0] + "_summary_stats" + ".csv",
+                replace=False,
+            )
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
     else:
