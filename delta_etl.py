@@ -99,7 +99,7 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
 
     # write file to bigquery
     with open(fpath, "rb") as source_file:
-        job = client.load_table_from_file(source_file, table_ref, job_config=job_config)
+        job = bq_client.load_table_from_file(source_file, table_ref, job_config=job_config)
     job.result()  # Waits for table load to complete.
 
 
