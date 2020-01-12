@@ -105,7 +105,7 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
 
 def bq_add_timestamp(table_id, timestamp):
     """Query bigquery and add timestamp"""
-    table_ref = dataset_ref.table(table_id)
+    table_ref = project_id + "." + write_dataset_id + "." + table_id
     job_config = bigquery.QueryJobConfig()
     job_config.destination = table_ref
     job_config.dry_run = False
@@ -297,7 +297,7 @@ def csv_checks(csv_filename, dataset_schema):
             ):
 
                 logger.info(
-                    "CSV header exists...writing {} to bigquery without header row".format(fn)
+                    "CSV header exists...writing {} to bigquery without first row".format(fn)
                 )
                 # write to bq without header row
                 bq_write(csv_filename, table_mapping[fn_str] + "_delta", 1, table_dtypes)
