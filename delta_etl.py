@@ -141,7 +141,7 @@ def bq_get_summary_stats(table_id):
           SELECT * FROM `{table}`
         ),
         table_as_json AS (
-          SELECT  REGEXP_REPLACE(TO_JSON_STRING(t), r'^{|}$', '') AS row
+          SELECT  REGEXP_REPLACE(TO_JSON_STRING(t), r'^\{|\}$', '') AS row
           FROM `table` AS t
         ),
         pairs AS (
@@ -382,6 +382,7 @@ def csv_checks(csv_filename, dataset_schema):
             )
             logger.info("number of rows added = {r}".format(r=final_row_count))
             logger.info("number of error rows skipped = {}".format(csv_row_count - final_row_count))
+            logger.info("retrieving summary stats.....")
             summary_stats = bq_get_summary_stats(table_mapping[fn_str] + "_delta")
             summary_stats.to_csv(
                 os.path.abspath(local_dir + "/" + fn.split(".")[0] + "_summary_stats" + ".csv")
@@ -391,6 +392,11 @@ def csv_checks(csv_filename, dataset_schema):
                 os.path.abspath(local_dir + "/" + fn.split(".")[0] + "_summary_stats" + ".csv"),
                 write_storage_filepath + fn.split(".")[0] + "_summary_stats" + ".csv",
                 replace=False,
+            )
+            logger.info(
+                "Summary stats saved to {}".format(
+                    write_storage_filepath + fn.split(".")[0] + "_summary_stats" + ".csv"
+                )
             )
         else:
             logger.info("Delta table {} does not have mapping".format(fn))
