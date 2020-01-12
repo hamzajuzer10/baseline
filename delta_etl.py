@@ -130,8 +130,8 @@ def bq_add_timestamp(table_id, timestamp):
     logger.info("Timestamp added to bq table {}".format(table_id))
 
 
-def bq_get_row_count(table_id):
-    """Return row count of bigquery table"""
+def bq_get_summary_stats(table_id):
+    """Return summary statistics of bigquery table"""
     table_ref = project_id + "." + write_dataset_id + "." + table_id
     job_config = bigquery.QueryJobConfig()
     job_config.use_query_cache = True
@@ -171,11 +171,11 @@ def bq_get_row_count(table_id):
 
     # Start the query, passing in the extra configuration.
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
-    return query_job.result().to_dataframe()  # return the first result (count of rows)
+    return query_job.result().to_dataframe()  # return the dataframe result
 
 
-def bq_get_summary_stats(table_id):
-    """Return summary statistics of bigquery table"""
+def bq_get_row_count(table_id):
+    """Return row count of bigquery table"""
     table_ref = project_id + "." + write_dataset_id + "." + table_id
     job_config = bigquery.QueryJobConfig()
     job_config.use_query_cache = True
