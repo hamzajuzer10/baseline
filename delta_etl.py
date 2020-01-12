@@ -90,7 +90,7 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict, original_row
     job_config.skip_leading_rows = header
     job_config.allow_jagged_rows = True
     job_config.field_delimiter = "|"
-    job_config.max_bad_records = original_row_count * bad_rows_allowed
+    job_config.max_bad_records = int(floor(original_row_count * bad_rows_allowed))
 
     # set write schema using original bq table
     schema = []
