@@ -108,7 +108,7 @@ def bq_add_timestamp(table_id, timestamp):
     table_ref = dataset_ref.table(table_id)
     job_config = bigquery.QueryJobConfig()
     job_config.destination = table_ref
-    job_config.dry_run = True
+    job_config.dry_run = False
     job_config.write_disposition = "WRITE_TRUNCATE"
     job_config.create_disposition = "CREATE_NEVER"
     job_config.use_query_cache = True
@@ -289,10 +289,13 @@ def csv_checks(csv_filename, dataset_schema):
             # compare csv first row and bq table column names
             csv_header = [str(x).lower() for x in csv_header]
             table_columns_lower = [x.lower() for x in table_columns]
-            if len(csv_header) == len(table_columns_lower) and len(csv_header) == sum(
-                [1 for i, j in zip(csv_header, table_columns_lower) if i == j]
+            if (
+                len(csv_header) == len(table_columns_lower)
+                and len(csv_header)
+                == sum([1 for i, j in zip(csv_header, table_columns_lower) if i == j])
                 or csv_data[csv_data.columns[0]].iloc[0] == csv_data.columns[0]
             ):
+
                 logger.info(
                     "CSV header exists...writing {} to bigquery without header row".format(fn)
                 )
