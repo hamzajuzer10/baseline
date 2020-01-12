@@ -143,7 +143,7 @@ def get_bq_row_count(table_id):
 
     # Start the query, passing in the extra configuration.
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
-    return query_job.result().to_dataframe().loc[0, 0]  # return the first result (count of rows)
+    return query_job.result().to_dataframe().iloc[0]  # return the first result (count of rows)
 
 
 def initialise_logger():
