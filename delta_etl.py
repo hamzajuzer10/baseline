@@ -130,7 +130,7 @@ def bq_add_timestamp(table_id, timestamp):
 
 def get_bq_row_count(table_id):
     """Query bigquery"""
-    table_ref = dataset_ref.table(table_id)
+    table_ref = project_id + "." + write_dataset_id + "." + table_id
     job_config = bigquery.QueryJobConfig()
     job_config.use_query_cache = True
 
