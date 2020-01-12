@@ -127,13 +127,6 @@ def bq_add_timestamp(table_id, timestamp):
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
     query_job.result()  # Wait for the job to complete.
 
-    table = bq_client.get_table(table_ref)  # Make an API request.
-    original_schema = table.schema
-    new_schema = original_schema[:]  # Creates a copy of the schema.
-    new_schema[-1] = SF("TIMESTAMP", "DATE")
-    table.schema = new_schema
-    table_update = bq_client.update_table(table, ["schema"])  # Make an API request.
-
     logger.info("Timestamp added to bq table {}".format(table_id))
 
 
@@ -368,28 +361,24 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
-        if blob_fn == "20191128_M_ARTICULOS_20191128.dat.gz":
-            logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
-            download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
-            while not os.path.exists(
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")
-            ):
-                gunzip(
-                    os.path.abspath(local_dir + "/" + blob_fn),
-                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                )
-                upload_blob(
-                    bucket,
-                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                    write_storage_filepath + blob_fn.split(".")[0] + ".csv",
-                    replace=False,
-                )
-            else:
-                logger.info(
-                    "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
-                )
-                csv_checks(
-                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                    dataset_schema,
-                )
-            logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
+        logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
+        download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
+        while not os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
+            gunzip(
+                os.path.abspath(local_dir + "/" + blob_fn),
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+            )
+            upload_blob(
+                bucket,
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                write_storage_filepath + blob_fn.split(".")[0] + ".csv",
+                replace=False,
+            )
+        else:
+            logger.info(
+                "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
+            )
+            csv_checks(
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"), dataset_schema,
+            )
+        logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
