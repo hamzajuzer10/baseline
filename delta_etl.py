@@ -125,7 +125,7 @@ def bq_add_timestamp(table_id, timestamp):
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
     query_job.result()  # Wait for the job to complete.
 
-    logger.info("Query results loaded to the table {}".format(table_id))
+    logger.info("Timestamp added to bq table {}".format(table_id))
 
 
 def get_bq_row_count(table_id):
@@ -143,7 +143,7 @@ def get_bq_row_count(table_id):
 
     # Start the query, passing in the extra configuration.
     query_job = bq_client.query(sql, job_config=job_config)  # Make an API request.
-    return query_job.result()  # Wait for the job to complete.
+    return query_job.result()[0]  # return the first result (count of rows)
 
 
 def initialise_logger():
