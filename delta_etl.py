@@ -67,6 +67,7 @@ blob_list = [blob.name for blob in blobs]
 write_dataset_id = "delta_data"
 dataset_ref = bq_client.dataset(write_dataset_id)
 write_storage_filepath = "Working_folder/AT/ETL_test_upload/"
+bad_rows_allowed = 0.05  # percentage of bad rows allowed in csv to write to bq
 
 # define compute local disk file directory locations
 home = str(Path.home())
@@ -80,7 +81,7 @@ with open("table_mapping.json", "r") as mapping:
 # ===================function definitions====================#
 
 
-def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
+def bq_write(fpath, table_id: str, header: int, table_dtypes: dict, original_row_count):
     """Write to bigquery"""
     table_ref = dataset_ref.table(table_id)
     job_config = bigquery.LoadJobConfig()
@@ -89,7 +90,7 @@ def bq_write(fpath, table_id: str, header: int, table_dtypes: dict):
     job_config.skip_leading_rows = header
     job_config.allow_jagged_rows = True
     job_config.field_delimiter = "|"
-    job_config.max_bad_records = 10000
+    job_config.max_bad_records = original_row_count * bad_rows_allowed
 
     # set write schema using original bq table
     schema = []
@@ -113,6 +114,13 @@ def bq_add_timestamp(table_id, timestamp):
     job_config.create_disposition = "CREATE_NEVER"
     job_config.use_query_cache = True
     # job_config.time_partitioning = TP(type_="DAY", field="TIMESTAMP")
+
+    table = bq_client.get_table(table_ref)  # Make an API request.
+    original_schema = table.schema
+    new_schema = original_schema[:]  # Creates a copy of the schema.
+    new_schema.append(SF("TIMESTAMP", "DATE"))
+    table.schema = new_schema
+    table_update = bq_client.update_table(table, ["schema"])  # Make an API request.
 
     sql = """
         SELECT *, {t} as TIMESTAMP
@@ -301,7 +309,13 @@ def csv_checks(csv_filename, dataset_schema):
                 )
                 # write to bq without header row
                 header_row = 1
-                bq_write(csv_filename, table_mapping[fn_str] + "_delta", header_row, table_dtypes)
+                bq_write(
+                    csv_filename,
+                    table_mapping[fn_str] + "_delta",
+                    header_row,
+                    table_dtypes,
+                    csv_row_count,
+                )
                 logger.info("Finished writing to bigquery")
             else:
                 logger.info(
@@ -310,7 +324,13 @@ def csv_checks(csv_filename, dataset_schema):
                     )
                 )
                 header_row = 0
-                bq_write(csv_filename, table_mapping[fn_str] + "_delta", header_row, table_dtypes)
+                bq_write(
+                    csv_filename,
+                    table_mapping[fn_str] + "_delta",
+                    header_row,
+                    table_dtypes,
+                    csv_row_count,
+                )
 
             logger.info("Adding timestamp column to table")
             bq_add_timestamp(table_mapping[fn_str] + "_delta", re.findall("\d+", fn)[0])
@@ -347,24 +367,28 @@ if __name__ == "__main__":
     dataset_schema = get_bq_schemas(dataset_id)
     for blob in blob_list:
         blob_fn = blob.split("/")[-1]
-        logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
-        download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
-        while not os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
-            gunzip(
-                os.path.abspath(local_dir + "/" + blob_fn),
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-            )
-            upload_blob(
-                bucket,
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                write_storage_filepath + blob_fn.split(".")[0] + ".csv",
-                replace=False,
-            )
-        else:
-            logger.info(
-                "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
-            )
-            csv_checks(
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"), dataset_schema,
-            )
-        logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
+        if blob_fn == "20191128_M_ARTICULOS_20191128.dat.gz":
+            logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
+            download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
+            while not os.path.exists(
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")
+            ):
+                gunzip(
+                    os.path.abspath(local_dir + "/" + blob_fn),
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                )
+                upload_blob(
+                    bucket,
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                    write_storage_filepath + blob_fn.split(".")[0] + ".csv",
+                    replace=False,
+                )
+            else:
+                logger.info(
+                    "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
+                )
+                csv_checks(
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                    dataset_schema,
+                )
+            logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
