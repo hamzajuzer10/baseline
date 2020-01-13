@@ -21,11 +21,11 @@ dataset_id = "baseline"
 bl_l = "section"
 
 # Scope for the baseline (at an area level)
-bl_s = "ALIMENTACION"
+bl_s = "FRESCOS"
 
 
 # Append or replace destination table (either 'append' or 'replace')
-bl_table_config = 'replace'
+bl_table_config = 'append'
 
 # Pull forward week
 ext_week = 4
