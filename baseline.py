@@ -84,7 +84,7 @@ def load_promo_from_bq(area, section, project_id):
     SELECT date, sku_root_id , {bl_l} , promo_id, promo_year, promo_mechanic, discount_depth, total_sale_qty, s_prev_bl_qty, pf_after_bl_qty
     FROM `ETL.aggregate_promo_to_sku_summary`
     WHERE section = "{section}"
-    AND area = "{area}”
+    AND area = "{area}"
     AND s_prev_bl_qty is not null
     AND pf_after_bl_qty is not null
     """.format(bl_l = bl_l, section = section, area = area)
@@ -108,7 +108,8 @@ def load_np_from_bq(area, section, project_id):
     WHERE promo_flag = 0
     AND section =  "{section}"
     AND area = "{area}" 
-    group by date, sku_root_id, {bl_l} """.format(bl_l = bl_l, section = section, area = area)
+    group by date, sku_root_id, {bl_l} 
+    """.format(bl_l = bl_l, section = section, area = area)
 
     for i in tqdm(range(1), desc='Loading table...'):
         weekly_agg = pandas_gbq.read_gbq(weeklyagg_sql, project_id=project_id)
