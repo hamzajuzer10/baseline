@@ -21,11 +21,11 @@ dataset_id = "baseline"
 bl_l = "section"
 
 # Scope for the baseline (at an area level)
-bl_s = "FRESCOS"
+bl_s = "ALIMENTACION"
 
 
 # Append or replace destination table (either 'append' or 'replace')
-bl_table_config = 'append'
+bl_table_config = 'replace'
 
 # Pull forward week
 ext_week = 4
@@ -84,7 +84,9 @@ def load_promo_from_bq(area, section, project_id):
     SELECT date, sku_root_id , {bl_l} , promo_id, promo_year, promo_mechanic, discount_depth, total_sale_qty, s_prev_bl_qty, pf_after_bl_qty
     FROM `ETL.aggregate_promo_to_sku_summary`
     WHERE section = "{section}"
-    AND area = "{area}" 
+    AND area = "{area}”
+    AND s_prev_bl_qty is not null
+    AND pf_after_bl_qty is not null
     """.format(bl_l = bl_l, section = section, area = area)
 
     for i in tqdm(range(1), desc='Loading table...'):
