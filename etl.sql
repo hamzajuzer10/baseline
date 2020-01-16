@@ -2795,6 +2795,7 @@ in_leaflet_flag,
 in_gondola_flag,
 in_both_leaflet_gondola_flag,
 n_promo_mech,
+n_promo,
 promo_prev_week
 
 FROM `gum-eroski-dev.ETL.daily_total_aggregate_promo_to_sku`
