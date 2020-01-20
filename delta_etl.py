@@ -59,14 +59,17 @@ project_id = "gum-eroski-dev"
 # define read GCP parameters
 dataset_id = "source_data"
 bucket = "erk-data-feed"
-storage_filepath = "eroski-deltas"
+storage_filepath = "AVANTE_INCR" #"eroski-deltas"
 blobs = storage_client.list_blobs(bucket, prefix=storage_filepath)
 blob_list = [blob.name for blob in blobs]
 
 # define write GCP parameters
-write_dataset_id = "delta_data"
+write_dataset_id = "delta_data_secondbatch"
 dataset_ref = bq_client.dataset(write_dataset_id)
-write_storage_filepath = "Working_folder/AT/ETL_test_upload/"
+write_storage_filepath = "Working_folder/SL/ETL_test_upload/"
+
+
+
 bad_rows_allowed = 0.05  # percentage of bad rows allowed in csv to write to bq
 
 # define compute local disk file directory locations
