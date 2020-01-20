@@ -426,8 +426,8 @@ if __name__ == "__main__":
         blob_fn = blob.split("/")[-1]
         logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
         download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
-        local_file = local_dir + "/" + blob_fn.split(".")[0] + ".csv"
-        while not os.path.exists(os.path.abspath(local_file)):
+        local_file = blob_fn.split(".")[0] + ".csv"
+        while not os.path.exists(os.path.abspath(local_dir + "/" + local_file)):
             if blob_fn.split(".")[-1] != "gz":
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
@@ -440,23 +440,16 @@ if __name__ == "__main__":
                         + ".csv"
                     ),
                 )
-                local_file = (
-                    local_dir
-                    + "/"
-                    + blob_fn.split(".")[-1][0:8]
-                    + "_"
-                    + blob_fn.split(".")[0]
-                    + ".csv"
-                )
+                local_file = blob_fn.split(".")[-1][0:8] + "_" + blob_fn.split(".")[0] + ".csv"
             else:
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
-                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
+                    os.path.abspath(local_dir + "/" + local_file),
                 )
             upload_blob(
                 bucket,
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                write_storage_filepath + blob_fn.split(".")[0] + ".csv",
+                os.path.abspath(local_dir + "/" + local_file),
+                write_storage_filepath + local_file,
                 replace=False,
             )
         else:
@@ -464,6 +457,6 @@ if __name__ == "__main__":
                 "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
             )
             csv_checks(
-                os.path.abspath(local_file), dataset_schema,
+                os.path.abspath(local_dir + "/" + local_file), dataset_schema,
             )
         logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
