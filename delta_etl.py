@@ -59,7 +59,7 @@ project_id = "gum-eroski-dev"
 # define read GCP parameters
 dataset_id = "source_data"
 bucket = "erk-data-feed"
-storage_filepath = "eroski-deltas/AVANTE_INCR" #"eroski-deltas"
+storage_filepath = "eroski-deltas/AVANTE_INCR"  # "eroski-deltas"
 blobs = storage_client.list_blobs(bucket, prefix=storage_filepath)
 blob_list = [blob.name for blob in blobs]
 
@@ -67,7 +67,6 @@ blob_list = [blob.name for blob in blobs]
 write_dataset_id = "delta_data_secondbatch"
 dataset_ref = bq_client.dataset(write_dataset_id)
 write_storage_filepath = "Working_folder/SL/ETL_test_upload/"
-
 
 
 bad_rows_allowed = 0.05  # percentage of bad rows allowed in csv to write to bq
@@ -428,15 +427,22 @@ if __name__ == "__main__":
         logger.info("-----------------Starting ETL of {}-----------------".format(blob_fn))
         download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
         while not os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
-            if os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] != "gz":
-                              gunzip(
-                os.path.abspath(local_dir + "/" + blob_fn),
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] + "_" + os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"))
-      
+            if blob_fn.split(".")[-1] != "gz":
+                gunzip(
+                    os.path.abspath(local_dir + "/" + blob_fn),
+                    os.path.abspath(
+                        local_dir
+                        + "/"
+                        + blob_fn.split(".")[-1]
+                        + "_"
+                        + blob_fn.split(".")[0]
+                        + ".csv"
+                    ),
+                )
             else:
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
-                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")
+                    os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
                 )
             upload_blob(
                 bucket,
