@@ -432,7 +432,7 @@ if __name__ == "__main__":
                 gunzip(
                 os.path.abspath(local_dir + "/" + blob_fn),
                 os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] + "_" + os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-            )
+                )
             else:
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
