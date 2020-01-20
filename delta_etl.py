@@ -459,6 +459,6 @@ if __name__ == "__main__":
                 "File {} already unzipped".format(os.path.abspath(local_dir + "/" + blob_fn))
             )
             csv_checks(
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"), dataset_schema,
+                os.path.abspath(local_file), dataset_schema,
             )
         logger.info("-----------------Finished ETL of {}-----------------".format(blob_fn))
