@@ -440,18 +440,7 @@ if __name__ == "__main__":
                         + ".csv"
                     ),
                 )
-<<<<<<< HEAD
                 local_file = blob_fn.split(".")[-1][0:8] + "_" + blob_fn.split(".")[0] + ".csv"
-=======
-                local_file = (
-                    local_dir
-                    + "/"
-                    + blob_fn.split(".")[-1][0:8]
-                    + "_"
-                    + blob_fn.split(".")[0]
-                    + ".csv"
-                )
->>>>>>> 030050fe8c277025de852caab8f36818a6a8c9d1
             else:
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
