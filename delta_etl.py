@@ -429,10 +429,10 @@ if __name__ == "__main__":
         download_blob(bucket, blob, os.path.abspath(local_dir + "/" + blob_fn), replace=False)
         while not os.path.exists(os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv")):
             if os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] != "gz":
-                gunzip(
+                              gunzip(
                 os.path.abspath(local_dir + "/" + blob_fn),
-                os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] + "_" + os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"),
-                )
+                os.path.abspath(local_dir + "/" + blob_fn.split(".")[-1] + "_" + os.path.abspath(local_dir + "/" + blob_fn.split(".")[0] + ".csv"))
+      
             else:
                 gunzip(
                     os.path.abspath(local_dir + "/" + blob_fn),
