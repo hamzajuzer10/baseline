@@ -64,7 +64,7 @@ blobs = storage_client.list_blobs(bucket, prefix=storage_filepath)
 blob_list = [blob.name for blob in blobs]
 
 # define write GCP parameters
-write_dataset_id = "delta_data_secondbatch"
+write_dataset_id = "delta_data_2"
 dataset_ref = bq_client.dataset(write_dataset_id)
 write_storage_filepath = "Working_folder/SL/ETL_test_upload/"
 
